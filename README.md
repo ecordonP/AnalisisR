@@ -1,9 +1,9 @@
 # AnalisisR 1.0
 
 Aplicación de escritorio independiente para preparar datos, conversar con un
-endpoint de IA y ejecutar análisis locales con R. No necesita instalar Verosímil
-ni tener disponible su carpeta. Las funciones de datos, conexiones, cifrado y
-procesos se han adaptado de ese proyecto y se mantienen aquí.
+endpoint de IA y ejecutar análisis locales con R. Es autónoma: los módulos de datos,
+conexiones, cifrado y procesos viven en este directorio y no dependen de ningún otro
+proyecto.
 
 **Requiere R instalado.** AnalisisR no incluye R ni lo empaqueta: todos los
 procedimientos estadísticos se calculan en R y no hay alternativa en Python. Sin R
@@ -131,8 +131,8 @@ la variable `ANALISISR_MASTER_KEY`.
 Los perfiles y bloqueos tienen almacenamiento propio: `%APPDATA%/AnalisisR`
 en Windows, `~/Library/Application Support/AnalisisR` en macOS y
 `$XDG_CONFIG_HOME/AnalisisR` (o `~/.config/AnalisisR`) en Linux.
-No se leen ni migran automáticamente los perfiles de Verosímil: configura tus
-endpoints en AnalisisR. También se aceptan las variables de clave del proveedor
+No se leen ni migran perfiles de otras aplicaciones: configura tus endpoints en
+AnalisisR. También se aceptan las variables de clave del proveedor
 o `ANALISISR_API_KEY`.
 
 Al aplicar el tratamiento, los niveles de medida declarados se guardan en un archivo
@@ -268,8 +268,9 @@ python -m pytest -q
 ```
 
 Las pruebas de R y Qt se omiten si falta su dependencia. Las pruebas de
-independencia copian los módulos a una carpeta aislada y bloquean los imports
-de Verosímil. Ninguna prueba necesita claves reales ni un endpoint remoto.
+independencia copian los módulos a una carpeta aislada y comprueban que no se cargue
+código de fuera de ese directorio. Ninguna prueba necesita claves reales ni un endpoint
+remoto.
 
 ## Compilar para otros sistemas
 

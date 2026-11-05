@@ -1,4 +1,4 @@
-"""Regresiones de endpoints adaptadas de Verosimil; transporte simulado."""
+"""Regresiones de los endpoints de IA con transporte simulado."""
 from __future__ import annotations
 
 import json

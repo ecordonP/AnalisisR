@@ -1,4 +1,4 @@
-"""Widgets y procesos de AnalisisR, adaptados de la interfaz de Verosimil."""
+"""Widgets y procesos de AnalisisR: estilo propio, procesos cancelables y Markdown."""
 from __future__ import annotations
 
 import codecs

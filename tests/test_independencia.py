@@ -1,4 +1,4 @@
-"""Independencia de código, configuración y credenciales de Verosímil."""
+"""Autonomía del código, la configuración y las credenciales: sin dependencias externas."""
 from __future__ import annotations
 
 import os
@@ -15,7 +15,7 @@ import AnalisisR as app
 
 
 @pytest.mark.parametrize("with_gui", [False, True])
-def test_copia_aislada_sin_modulos_verosimil(tmp_path: Path, with_gui: bool) -> None:
+def test_copia_aislada_sin_modulos_externos(tmp_path: Path, with_gui: bool) -> None:
     if with_gui:
         pytest.importorskip("PySide6")
     folder = tmp_path / "standalone"
@@ -26,21 +26,24 @@ def test_copia_aislada_sin_modulos_verosimil(tmp_path: Path, with_gui: bool) -> 
     shutil.copytree(Path(app.__file__).parent / "assets", folder / "assets")
     (folder / "source.csv").write_text("x,y\n1,10\n2,20\n", encoding="utf-8")
     bootstrap = r'''
-import importlib.abc
 import json
 import sys
 from pathlib import Path
 
 folder = Path(sys.argv[1]).resolve()
 sys.path.insert(0, str(folder))
-class NoVerosimil(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path=None, target=None):
-        if fullname.startswith("verosimil") or fullname == "gui":
-            raise AssertionError("Dependencia externa: " + fullname)
-sys.meta_path.insert(0, NoVerosimil())
 import AnalisisR as app
 for module in (app, app.engine, app.secrets):
     assert Path(module.__file__).parent == folder
+# Todo el codigo cargado debe salir de la carpeta aislada o del propio interprete
+# (biblioteca estandar, DLLs y site-packages): nada de directorios ajenos.
+permitidos = [folder, Path(sys.prefix).resolve(), Path(sys.base_prefix).resolve()]
+for nombre, modulo in list(sys.modules.items()):
+    archivo = getattr(modulo, "__file__", None)
+    if not archivo or nombre.startswith("_"):
+        continue
+    ruta = Path(archivo).resolve()
+    assert any(ruta.is_relative_to(raiz) for raiz in permitidos), nombre + " -> " + str(ruta)
 request = folder / "request.json"
 app.write_json(request, {"action": "profile", "data": str(folder / "source.csv")})
 assert app.worker(request) == 0
@@ -69,7 +72,7 @@ def test_perfiles_y_bloqueos_son_propios(tmp_path: Path, monkeypatch: pytest.Mon
     monkeypatch.setattr(app.secrets.os.path, "expanduser", lambda path: str(tmp_path))
     assert app.secrets.APP_DIR_NAME == "AnalisisR"
     assert app.secrets.KEYRING_SERVICE == "AnalisisR"
-    foreign = tmp_path / "Verosimil" / "backends.json"
+    foreign = tmp_path / "OtraAplicacion" / "backends.json"
     foreign.parent.mkdir()
     foreign.write_text('{"profiles":{"local":{"model":"foreign"}}}', encoding="utf-8")
     original = foreign.read_bytes()
@@ -89,7 +92,7 @@ def test_variable_api_propia(monkeypatch: pytest.MonkeyPatch) -> None:
     backend = app.engine.Backend("openai", "", "example", 100, 0, 0.2, 10)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANALISISR_API_KEY", raising=False)
-    monkeypatch.setenv("VEROSIMIL_API_KEY", "foreign")
+    monkeypatch.setenv("OTRA_APP_API_KEY", "foreign")
     assert backend.resolved_key() is None
     monkeypatch.setenv("ANALISISR_API_KEY", "own")
     assert backend.resolved_key() == "own"

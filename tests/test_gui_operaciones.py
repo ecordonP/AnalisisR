@@ -105,7 +105,7 @@ def test_botones_compactos(window):
             assert button.width() < window.tabs.width() / 2
 
 
-def test_salida_se_renderiza_como_tabla_con_el_estilo_de_verosimil(window):
+def test_salida_se_renderiza_como_tabla_con_el_estilo_de_la_aplicacion(window):
     import analisisr_ui as ui
 
     window.answered("Descriptivos", {

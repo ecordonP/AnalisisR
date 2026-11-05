@@ -1,6 +1,6 @@
 """Motor propio de AnalisisR: datos, endpoints y ejecucion local de R.
 
-Funciones adaptadas de Verosimil; no requiere sus modulos ni su instalacion.
+Modulo autonomo: no depende de ningun otro proyecto ni de instalaciones externas.
 """
 from __future__ import annotations
 

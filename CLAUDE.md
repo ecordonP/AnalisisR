@@ -20,8 +20,8 @@ import reaches outside.
 
 `README.md` here is the product documentation and is kept current — read it for feature
 behaviour, privacy rules, R package requirements and deployment details. `AGENTS.md` is
-partly stale (it claims external `verosimil`/`gui` imports, no tests and no requirements
-file — all three are wrong now).
+partly stale (it claims external imports, no tests and no requirements file — all three
+are wrong now) and is kept out of the published repository until it is refreshed.
 
 ## Commands
 
