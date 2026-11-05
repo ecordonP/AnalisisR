@@ -62,7 +62,7 @@ def verify(bundle: Path) -> dict:
             return response
 
         ui = operation("interfaz", {"action": "selftest"}, bundle / "AnalisisR.exe")
-        assert ui["frozen"] and ui["tabs"] == 4 and ui["templates"] == 27 and ui["guide"] and ui["icon"]
+        assert ui["frozen"] and ui["tabs"] == 4 and ui["templates"] == 28 and ui["guide"] and ui["icon"]
         # El paquete no lleva R: el trabajador debe encontrar el del sistema sin PATH ni R_HOME.
         assert ui["r_ready"] and ui["rscript"]
         assert ui["max_tokens"] == 64000 and ui["timeout"] == 300

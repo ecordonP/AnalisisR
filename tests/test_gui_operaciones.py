@@ -332,7 +332,7 @@ def test_plantillas_se_muestran_en_orden_alfabetico(window):
         "ANCOVA", "ANOVA", "ANOVA de medidas repetidas", "Antes y después",
         "Ausentes e imputación múltiple", "Consistencia interna", "Correlación",
         "Curva ROC y capacidad diagnóstica", "Descriptivos", "Diferencia entre medias", "Fiabilidad",
-        "Invarianza de medida", "Mediación", "Modelo multinivel", "Moderación", "Regresión",
+        "Invarianza de medida", "Mediación", "Modelo multinivel", "Moderación", "Normalidad", "Regresión",
         "Regresión logística", "Regresión multinomial", "Regresión ordinal", "Regresión para recuentos",
         "Tablas de contingencia",
     ]

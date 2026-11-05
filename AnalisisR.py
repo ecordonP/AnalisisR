@@ -566,6 +566,61 @@ TEMPLATES.update({
         "comparabilidad del instrumento y advierte de que la invarianza no se demuestra con una "
         "muestra única ni implica validez de contenido."
     ),
+    "Normalidad": (
+        "Comprueba la normalidad de [variables] con el paquete MVN. Pruebas multivariantes "
+        "solicitadas: [pruebas_multivariantes]. Pruebas univariantes solicitadas: "
+        "[pruebas_univariantes]. Calcula exactamente las pedidas, ninguna más y ninguna menos, "
+        "usando como valor del argumento el código que figura entre paréntesis en cada nombre. "
+        "Comprueba requireNamespace('MVN', quietly=TRUE) y, si falta el paquete, indícalo y "
+        "solicita su instalación manual sin sustituirlo por otra prueba. MVN::mvn devuelve una "
+        "sola prueba multivariante por llamada, así que invócalo una vez por cada prueba pedida "
+        "con mvn_test igual a su código, y otra vez por cada prueba univariante con "
+        "univariate_test igual al suyo; los únicos valores válidos en esta versión son "
+        "mardia, hz, hw, royston, doornik_hansen y energy para las multivariantes, y SW, SF, AD, "
+        "CVM y Lillie para las univariantes. El argumento se llama mvn_test, no mvnTest: no uses "
+        "el nombre antiguo ni inventes códigos. Informa n analizado, ausentes por variable y qué "
+        "casos se excluyen, porque el análisis usa casos completos en todas las variables. "
+        "Presenta dos tablas, una por familia, con prueba, estadístico, grados de libertad cuando "
+        "la prueba los devuelva, p, método declarado por el paquete (asintótico o bootstrap) y "
+        "conclusión, tomando los valores de los componentes multivariate_normality y "
+        "univariate_normality. Atención al formato: la columna p.value es de tipo texto y puede "
+        "llegar como <0.001, de modo que as.numeric() sobre ella devuelve NA con aviso de coerción "
+        "y cualquier if que dependa de ese valor se detiene con el error de valor ausente donde "
+        "TRUE/FALSE es necesario; limpia antes los símbolos con "
+        "sub('>', '', sub('<', '', trimws(as.character(p.value)))) y convierte después, tratando "
+        "<0.001 como menor que 0,001, o usa la columna MVN, que ya indica la conclusión, "
+        "detectándola con grepl('Not normal', ...), y envuelve cualquier condición en isTRUE(). "
+        "Añade la asimetría y la curtosis de cada variable desde el componente descriptives, "
+        "comprobando antes con names() o str() si la curtosis devuelta es bruta o en exceso para "
+        "no interpretar un valor próximo a tres como exceso elevado. Interpreta cada prueba por lo "
+        "que realmente contrasta, sin presentarlas como intercambiables: Mardia evalúa por "
+        "separado la asimetría y la curtosis multivariantes e indica qué componente se desvía; "
+        "Henze-Zirkler y Henze-Wagner son pruebas consistentes frente a desviaciones generales de "
+        "la normal multivariante; Royston se construye a partir de Shapiro-Wilk y exige entre 3 y "
+        "5000 casos, siendo sensible a los empates; Doornik-Hansen transforma asimetría y curtosis "
+        "y devuelve un X² con sus grados de libertad; la prueba de energía obtiene su p por "
+        "bootstrap, así que fija una semilla con set.seed antes de llamarla, declara el número de "
+        "réplicas y advierte de que su p varía entre ejecuciones. Si las pruebas pedidas no "
+        "coinciden en su conclusión, dilo explícitamente y explica a qué tipo de desviación es "
+        "sensible cada una en lugar de elegir la que más convenga. Acompaña siempre los p con la "
+        "magnitud de la desviación: con n grande cualquier prueba rechaza desviaciones triviales, "
+        "y con n pequeño ninguna tiene potencia, de modo que no interpretes p>0,05 como "
+        "demostración de normalidad ni un rechazo como prueba de que el análisis posterior sea "
+        "inválido. Con varias variables, recuerda que los p univariantes se acumulan: señala "
+        "cuántas pruebas se han realizado y, si procede, aplica un ajuste declarado tipo Holm como "
+        "orientación. Si se solicita, localiza observaciones atípicas multivariantes con "
+        "multivariate_outlier_method igual a quan o adj, fijando outlier_seed para que el resultado "
+        "sea reproducible, e informa de las observaciones señaladas con su distancia de Mahalanobis "
+        "sin eliminar ningún caso. MVN puede aplicar transformaciones de potencia mediante transform "
+        "o power_family: no las apliques en silencio; indica que están disponibles y qué cambiarían. "
+        "Cierra explicando las consecuencias prácticas para el análisis que se vaya a hacer: en "
+        "regresión y ANOVA el supuesto se refiere a los residuos del modelo y no a la distribución "
+        "bruta de las variables; en modelos de ecuaciones estructurales la no normalidad lleva a "
+        "estimadores robustos como MLR, o WLSMV con indicadores ordinales; en comparación de medias "
+        "lleva a Welch, a inferencia robusta o a contrastes de rangos, declarando que estos últimos "
+        "cambian el estimando. No recomiendes eliminar casos ni transformar variables como solución "
+        "automática."
+    ),
     "Mediación": (
         "Estima el efecto de [predictor] sobre [respuesta] a través de [mediador] mediante un modelo "
         "de senderos con lavaan::sem y variables observadas. Declara el modelo y el orden supuesto "
@@ -1533,6 +1588,16 @@ def create_window():
             text = TEMPLATES[name]
             fields = re.findall(r"\[([^\]]+)\]", text)
             columns = [c["column"] for c in self.profile["columns"]]
+            # Campos cuyas opciones son pruebas, no columnas: el código entre paréntesis
+            # es el valor exacto que espera MVN.
+            opciones = {
+                "pruebas_multivariantes": ["Mardia (mardia)", "Henze-Zirkler (hz)",
+                                           "Henze-Wagner (hw)", "Royston (royston)",
+                                           "Doornik-Hansen (doornik_hansen)", "Energía (energy)"],
+                "pruebas_univariantes": ["Shapiro-Wilk (SW)", "Shapiro-Francia (SF)",
+                                         "Anderson-Darling (AD)", "Cramér-von Mises (CVM)",
+                                         "Lilliefors (Lillie)"],
+            }
             labels = {"variables": "Variables del análisis", "grupo": "Variable de agrupación",
                       "puntuación": "Variable a comparar", "antes": "Medida antes", "después": "Medida después",
                       "variable_1": "Primera variable", "variable_2": "Segunda variable",
@@ -1543,7 +1608,9 @@ def create_window():
                       "moderador": "Variable moderadora", "agrupamiento": "Agrupación de nivel superior",
                       "medidas": "Medidas repetidas", "evaluaciones": "Columnas de evaluaciones",
                       "tiempo": "Tiempo hasta el evento", "evento": "Evento (1 = ocurre, 0 = censurado)",
-                      "factores": "Variables latentes e indicadores"}
+                      "factores": "Variables latentes e indicadores",
+                      "pruebas_multivariantes": "Pruebas multivariantes",
+                      "pruebas_univariantes": "Pruebas univariantes"}
             dialog = ui.QDialog(self)
             dialog.setWindowTitle("Preparar consulta: " + name)
             dialog.resize(560, 400)
@@ -1553,7 +1620,11 @@ def create_window():
             form.addRow(explanation)
             widgets = {}
             for field in fields:
-                if field == "factores":
+                if field in opciones:
+                    widget = ui.QListWidget()
+                    widget.addItems(opciones[field])
+                    widget.setSelectionMode(ui.QAbstractItemView.MultiSelection)
+                elif field == "factores":
                     widget = ui.FactorBuilder(columns)
                 elif field in ("variables", "predictores", "ítems", "covariables", "medidas", "evaluaciones"):
                     widget = ui.QListWidget()
@@ -1622,7 +1693,8 @@ def create_window():
                                   "Análisis factorial exploratorio": ("variables", 3),
                                   "Ausentes e imputación múltiple": ("variables", 2),
                                   "ANOVA de medidas repetidas": ("medidas", 2),
-                                  "Acuerdo entre evaluaciones": ("evaluaciones", 2)}.get(name, (None, 0))
+                                  "Acuerdo entre evaluaciones": ("evaluaciones", 2),
+                                  "Normalidad": ("variables", 2)}.get(name, (None, 0))
                 if field and len(selections[field]) < minimum:
                     ui.QMessageBox.information(dialog, "Completar selección",
                                                f"Selecciona al menos {minimum}: " + labels[field])

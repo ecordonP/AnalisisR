@@ -140,7 +140,8 @@ def test_ningun_prompt_usa_corchetes_fuera_de_sus_campos():
                           "evaluaciones", "factores", "grupo", "agrupamiento", "respuesta",
                           "puntuación", "antes", "después", "variable_1", "variable_2",
                           "filas", "columnas", "exposición", "predictor", "mediador",
-                          "moderador", "tiempo", "evento"}, (name, campos)
+                          "moderador", "tiempo", "evento",
+                          "pruebas_multivariantes", "pruebas_univariantes"}, (name, campos)
 
 
 @pytest.fixture

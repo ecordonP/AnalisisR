@@ -40,7 +40,7 @@ necesaria y no permite ninguna operación.
 
 ### Análisis con R
 
-- 27 plantillas de consulta que detallan estimandos, supuestos, contrastes,
+- 28 plantillas de consulta que detallan estimandos, supuestos, contrastes,
   diagnósticos, tamaños de efecto e interpretación, y que se rellenan con tus variables
   reales desde un formulario.
 - La sintaxis del código generado se comprueba localmente antes de ejecutarlo; los errores
@@ -65,7 +65,7 @@ necesaria y no permite ninguna operación.
 
 | Familia | Plantillas |
 | --- | --- |
-| **Exploración y descripción** | Ausentes e imputación múltiple, Correlación, Descriptivos, Tablas de contingencia |
+| **Exploración y descripción** | Ausentes e imputación múltiple, Correlación, Descriptivos, Normalidad, Tablas de contingencia |
 | **Comparación de medias y diseños** | ANCOVA, ANOVA, ANOVA de medidas repetidas, Antes y después, Diferencia entre medias |
 | **Regresión y modelos** | Mediación, Modelo multinivel, Moderación, Regresión, Regresión logística, Regresión multinomial, Regresión ordinal, Regresión para recuentos |
 | **Medida, fiabilidad y validez** | Acuerdo entre evaluaciones, Análisis factorial confirmatorio, Análisis factorial exploratorio, Consistencia interna, Fiabilidad, Invarianza de medida |
@@ -189,7 +189,7 @@ los permisos del usuario; el filtro de operaciones no es un aislamiento de segur
   consulta automáticamente ni deja campos pendientes entre corchetes.
   Incluye **Diferencia entre medias** para dos grupos independientes, **ANOVA**
   de un factor y **Tablas de contingencia** con frecuencias, porcentajes y asociación.
-  Las veintisiete plantillas, ordenadas alfabéticamente, detallan estimandos, pruebas, diagnósticos, tamaños de efecto
+  Las veintiocho plantillas, ordenadas alfabéticamente, detallan estimandos, pruebas, diagnósticos, tamaños de efecto
   e interpretación. **Regresión** solicita un modelo lineal con Breusch–Pagan,
   inferencia robusta HC3, VIF/GVIF, índices de condición, Shapiro–Wilk de residuos,
   RESET e influencia; para una respuesta no continua pide aclarar el modelo.
