@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Guía de AnalisisR: preparación de datos, endpoints de IA, ejecución local con R y catálogo de procedimientos estadísticos y paquetes recomendados.">
+<title>AnalisisR · Guía de uso y procedimientos estadísticos</title>
+<link rel="icon" type="image/png" href="analisisr-icon.png">
+<style>
+:root {
+  color-scheme: light dark;
+  --tinta:#0f172a; --suave:#475569; --tenue:#64748b; --borde:#e2e8f0;
+  --fondo:#fff; --panel:#f8fafc; --azul:#1d4ed8; --azul-claro:#eff6ff;
+}
+@media (prefers-color-scheme:dark) {
+  :root { --tinta:#e2e8f0; --suave:#cbd5e1; --tenue:#94a3b8; --borde:#334155;
+    --fondo:#0f172a; --panel:#1e293b; --azul:#93c5fd; --azul-claro:#1e3a5f; }
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--fondo); color:var(--tinta);
+  font:16px/1.65 "Segoe UI",system-ui,-apple-system,sans-serif; }
+main { max-width:1080px; margin:auto; padding:48px 24px 80px; }
+h1 { font-size:2.1rem; margin:0; letter-spacing:-.02em; }
+header img { display:block; width:420px; max-width:100%; height:auto;
+  background:#fff; border-radius:8px; padding:8px; }
+.lema { color:var(--tenue); margin:4px 0 0; }
+.version { display:inline-block; margin-top:18px; padding:4px 12px;
+  border-radius:999px; background:var(--azul-claro); color:var(--azul); font-size:.85rem; }
+h2 { font-size:1.3rem; margin:48px 0 8px; padding-top:20px;
+  border-top:1px solid var(--borde); scroll-margin-top:16px; }
+h3 { font-size:1.08rem; margin:28px 0 8px; scroll-margin-top:16px; }
+p,li { color:var(--suave); }
+p { margin:10px 0; }
+li { margin:6px 0; }
+a { color:var(--azul); text-underline-offset:3px; }
+a:focus-visible { outline:3px solid var(--azul); outline-offset:3px; }
+code,kbd { font-family:"Cascadia Code",Consolas,monospace; font-size:.88em;
+  background:var(--panel); border:1px solid var(--borde); border-radius:5px; padding:1px 5px;
+  overflow-wrap:anywhere; }
+pre { padding:14px 16px; background:var(--panel); border:1px solid var(--borde);
+  border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere; }
+pre code { border:0; padding:0; background:none; }
+.indice { background:var(--panel); border:1px solid var(--borde); border-radius:10px;
+  padding:16px 22px; margin:28px 0; }
+.indice ol { columns:2; column-gap:32px; margin:8px 0; padding-left:22px; }
+.indice li { break-inside:avoid; }
+.nota { border-left:3px solid var(--azul); background:var(--azul-claro);
+  padding:12px 16px; border-radius:0 8px 8px 0; margin:18px 0; }
+.nota p:first-child { margin-top:0; } .nota p:last-child { margin-bottom:0; }
+table { width:100%; border-collapse:collapse; margin:14px 0 22px; font-size:.93rem; }
+caption { text-align:left; font-weight:600; margin-bottom:8px; color:var(--suave); }
+th,td { text-align:left; padding:10px 12px; border:1px solid var(--borde);
+  vertical-align:top; overflow-wrap:anywhere; }
+th { background:var(--panel); font-weight:600; }
+td:first-child { width:22%; font-weight:600; }
+td:last-child { width:29%; }
+.subir { position:fixed; right:24px; bottom:24px; width:48px; height:48px;
+  display:grid; place-items:center; padding:0; z-index:10;
+  border:1px solid var(--borde); border-radius:999px; background:var(--azul-claro);
+  text-decoration:none; font-size:1.5rem; line-height:1;
+  box-shadow:0 2px 10px rgba(15,23,42,.18); }
+.subir:hover { background:var(--azul); color:var(--fondo); }
+.saltar { position:absolute; top:-60px; left:16px; padding:8px; background:var(--fondo); }
+.saltar:focus { top:8px; }
+footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--borde);
+  color:var(--tenue); font-size:.88rem; }
+@media (max-width:640px) {
+  main { padding:28px 16px 72px; }
+  .indice ol { columns:1; }
+  table { font-size:.83rem; } th,td { padding:7px 6px; }
+  td:first-child { width:24%; } td:last-child { width:30%; }
+}
+@media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+@media print {
+  :root { --tinta:#000; --suave:#222; --tenue:#444; --borde:#bbb;
+    --fondo:#fff; --panel:#f5f5f5; --azul:#163e7a; --azul-claro:#f2f5fa; }
+  main { max-width:none; padding:0; } .subir,.saltar { display:none; }
+  h2,h3 { break-after:avoid; } tr,.nota,pre { break-inside:avoid; }
+  thead { display:table-header-group; }
+}
+</style>
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<main id="inicio">
+<header>
+  <h1><img src="analisisr-logo.png" alt="AnalisisR" width="420" height="140"></h1>
+  <p class="lema">Guía de uso y procedimientos estadísticos con R</p>
+  <span class="version">Versión 1.0 · Ayuda local · Aplicación independiente</span>
+</header>
+<nav class="indice" aria-label="Contenido de la guía">
+<b>Contenido</b>
+<ol>
+  <li><a href="#que-es">Qué hace la aplicación</a></li>
+  <li><a href="#inicio-rapido">Primeros pasos</a></li>
+  <li><a href="#datos">Datos y transformaciones</a></li>
+  <li><a href="#endpoints">Conexión con la IA</a></li>
+  <li><a href="#resultados">Consultas y resultados</a></li>
+  <li><a href="#sesiones">Sesiones, informes y herramientas</a></li>
+  <li><a href="#procedimientos">Catálogo de procedimientos</a></li>
+  <li><a href="#paquetes">Preparar los paquetes de R</a></li>
+  <li><a href="#ejemplos">Ejemplos de consultas</a></li>
+  <li><a href="#privacidad">Privacidad y archivos de sesión</a></li>
+  <li><a href="#problemas">Solución de problemas</a></li>
+  <li><a href="#autoria">Autoría y condiciones de uso</a></li>
+  <li><a href="#fuentes">Documentación de referencia</a></li>
+</ol>
+</nav>
+<article id="contenido">
+<h2 id="que-es">Qué hace la aplicación</h2>
+<p>AnalisisR es una aplicación de escritorio para preparar datos, plantear preguntas
+estadísticas en español y ejecutar código R en tu equipo. La IA propone el análisis;
+R calcula sobre las variables seleccionadas. Puedes conversar sin ejecutar R o
+autorizar su ejecución para obtener resultados con tus datos.</p>
+<table>
+<caption>Las cuatro pestañas de AnalisisR</caption>
+<thead><tr><th scope="col">Pestaña</th><th scope="col">Qué permite hacer</th><th scope="col">Qué conviene comprobar</th></tr></thead>
+<tbody>
+<tr><td>1 · Entorno R</td><td>Ver la ruta de <code>Rscript</code> y la versión de R, indicar la carpeta de instalación si no se detecta, volver a detectarla sin cerrar la aplicación y comprobar los paquetes requeridos con su versión.</td><td>Es la única pestaña disponible mientras no se detecte R. Comprueba los paquetes antes de empezar: los que falten se instalan desde una consola de R.</td></tr>
+<tr><td>2 · Datos</td><td>Importar, revisar tipos de variables y faltantes, recodificar, agrupar categorías ordinales poco frecuentes y seleccionar columnas.</td><td>Aplica el tratamiento antes de consultar. Se trabaja sobre una copia. Al aplicar se guardan los tipos declarados junto al archivo de datos y se recuperan al volver a importarlo.</td></tr>
+<tr><td>3 · Endpoints IA</td><td>Elegir proveedor, URL, modelo, clave, límite de tokens y tiempo de operación. Probar la conexión y consultar su resultado.</td><td>Una conexión correcta no garantiza que cualquier modelo esté disponible para tu cuenta.</td></tr>
+<tr><td>4 · Chat y R</td><td>Escribir consultas, habilitar R, controlar el envío de su salida, cancelar una operación y abrir los archivos de sesión.</td><td>El área de consulta es verde tenue; la respuesta aparece sobre azul claro.</td></tr>
+</tbody></table>
+<p>Las operaciones mantienen la pestaña que has elegido. Durante una ejecución se
+bloquea la edición del entorno R, de los datos y de los endpoints; puedes cambiar de
+pestaña manualmente. Si no se detecta R, las pestañas de datos, endpoints y chat
+permanecen deshabilitadas y ninguna operación se lanza.</p>
+<div class="nota"><p><b>Alcance del catálogo.</b> Los procedimientos siguientes orientan
+lo que puedes pedir a la IA. No son botones de análisis preprogramados ni garantizan
+que cualquier modelo se ajuste correctamente. El resultado depende del diseño,
+los datos, los paquetes instalados y el código generado. AnalisisR no realiza una
+auditoría estadística automática.</p></div>
+
+<h2 id="inicio-rapido">Primeros pasos</h2>
+<ol>
+<li><b>Prepara R.</b> AnalisisR no incluye R y no funciona sin él: todos los procedimientos estadísticos se calculan en R. Instala R 4.x y sus paquetes, y comprueba el estado en la pestaña <b>Entorno R</b>. Si R está en una ruta poco habitual, indícala ahí y pulsa <b>Volver a detectar</b>. Mientras no se detecte, el resto de pestañas permanece deshabilitado.</li>
+<li><b>Importa tus datos</b> desde la pestaña Datos o usa Abrir reciente para seleccionar uno de los cinco últimos archivos importados. Revisa los tipos de medida y selecciona las variables pertinentes.</li>
+<li><b>Aplica el tratamiento y la selección.</b> La aplicación conserva el archivo original. Los tipos
+de medida que hayas declarado se guardan en un archivo <code>.analisisr.json</code> junto a tus datos y se
+recuperan al importarlos de nuevo. Las variables marcadas como binarias se recodifican a 0 y 1 en la copia de
+trabajo, con su primera categoría como 0 y referencia; el registro indica la correspondencia y las etiquetas de
+valor se reasignan a los códigos nuevos.</li>
+<li><b>Configura y prueba un endpoint.</b> Consulta el estado, el modelo informado y los avisos en la pestaña Endpoints IA.</li>
+<li><b>Plantea la pregunta</b> en Chat y R, indicando variables, grupos, medidas repetidas y objetivo.</li>
+<li><b>Revisa Ejecutar el R generado.</b> Está marcado por defecto; desmárcalo si solo deseas conversar sin ejecutar. Decide por separado si permites enviar la salida al endpoint para interpretarla.</li>
+<li><b>Revisa los resultados.</b> Comprueba supuestos, tamaño de efecto e intervalos, además de los valores p.</li>
+</ol>
+
+<h2 id="datos">Datos y transformaciones</h2>
+<p>Se admiten CSV y textos delimitados, Excel, SPSS, Stata y SAS. La importación
+de Excel necesita <code>readxl</code> y <code>jsonlite</code> en R; SPSS, Stata y SAS
+requieren <code>haven</code> y <code>jsonlite</code>. Los nombres de las columnas deben
+ser únicos y no estar vacíos.</p>
+<p>Los tipos disponibles son identificador (<code>id</code>), binaria
+(<code>binary</code>), nominal, ordinal, continua (<code>continuous</code>) y texto
+(<code>text</code>). La detección automática es una ayuda: corrige el tipo si no
+representa el significado de la variable.</p>
+<p>Ejemplos de reglas de recodificación, una por línea:</p>
+<pre><code>x2 = invertir 1..5
+grupo = 1,2 -&gt; 1; 3,4 -&gt; 2; resto -&gt; NA</code></pre>
+<p>La primera invierte la puntuación dentro de ese rango. La segunda agrupa valores
+y convierte el resto en ausentes. La fusión de categorías poco frecuentes afecta
+a variables ordinales. Revisa si esa transformación tiene sentido sustantivo.</p>
+<p>Volver a aplicar parte del origen y evita acumular una inversión sobre otra.
+Cambiar los datos aplicados limpia la conversación para no mezclar resultados.</p>
+
+<h2 id="endpoints">Conexión con la IA</h2>
+<p>Se incluyen conexiones para un servidor local compatible con llama-server,
+OpenAI, DeepSeek, Anthropic y Gemini. Selecciona el proveedor y ajusta URL y modelo
+según tu servidor o cuenta. Los nombres de modelo son editables.</p>
+<p>Los valores iniciales son <b>64000 tokens de salida</b> y <b>300 segundos
+(5 minutos) por operación</b>, editables en Endpoints IA. El límite efectivo de
+salida depende también del modelo y del servidor.</p>
+<p>El <b>razonamiento está desactivado con presupuesto fijo 0</b>. AnalisisR envía
+el parámetro equivalente de cada proveedor al conversar y probar el modelo.
+Selecciona un modelo que permita desactivarlo: los que requieren razonamiento
+se rechazan, sin activarlo automáticamente como alternativa. Si el servidor
+informa de pensamiento o tokens de razonamiento pese a la petición, se muestra
+un error. Un servidor que no informa del consumo interno no permite verificarlo.</p>
+<p><b>Probar conexión</b> presenta en la misma pestaña si la conexión ha funcionado,
+la URL, el modelo configurado, el modelo informado por el servidor cuando esté
+disponible, modelos anunciados y avisos. Un modelo que no figura en el listado
+debe revisarse; no equivale a haber validado una generación con ese modelo.</p>
+<p>La clave puede guardarse cifrada mediante el almacén propio de AnalisisR.
+Un campo vacío al guardar conserva la clave anterior. Cada proveedor también
+puede recibir su clave mediante sus variables de entorno.</p>
+
+<h2 id="resultados">Consultas y resultados</h2>
+<p>Especifica la pregunta, las variables y el diseño. Para comparar grupos indica
+si son independientes o las mismas personas en varios momentos. Para predecir,
+define la variable dependiente y su escala. Para estudiar una relación, explica
+qué ajuste por otras variables necesitas.</p>
+<p>Los resultados tabulares se muestran con encabezados, bordes y espaciado tipo
+Word. La aplicación facilita a R una función local <code>tabla()</code> para imprimir
+tablas sin instalar paquetes adicionales de presentación. Si aparece una salida
+de diagnóstico o un error no tabular, se conserva como texto.</p>
+<p>No hace falta pedir el formato en la consulta: la aplicación añade siempre
+la instrucción de presentar resultados en tablas. Si una salida correcta de R
+llega sin columnas definidas, se conserva en una tabla de una columna, Resultado,
+sin intentar inventar etiquetas ni separar sus cifras. Los errores siguen siendo
+diagnósticos, no resultados calculados.</p>
+<p>Al enviar una consulta, tu pregunta aparece inmediatamente en el chat.
+La casilla <b>Mostrar código R</b>, a la derecha de la ejecución local, añade
+al final de la respuesta el último script R ejecutado. Puedes consultarlo sin
+autorizar el envío de la salida al endpoint.</p>
+<p>La ejecución de R está marcada por defecto y no requiere una confirmación
+adicional por cada bloque. Puedes desactivarla desde su casilla. La opción de
+enviar la salida al endpoint también está marcada por defecto y se controla por separado.
+Mientras esté activa, las salidas R, que pueden contener valores de los datos,
+se enviarán al endpoint seleccionado para interpretarlas. Desmárcala para
+mantener los resultados locales.</p>
+<p>Antes de ejecutar, se analiza localmente la sintaxis del código. Si es inválida,
+la aplicación solicita una corrección sin ejecutar ese bloque ni abrir los datos.
+Solo se devuelve a la IA el código que propuso y el diagnóstico del analizador.
+Se permiten hasta tres errores de sintaxis consecutivos. Esto permite corregir errores como
+un <code>if</code> inesperado sin autorizar el envío de resultados privados; los
+errores producidos durante un cálculo no se reenvían sin ese permiso.</p>
+<p>Para insertar nombres sin escribirlos, pulsa <b>@</b> en la consulta. Se abrirá
+una lista con las variables del dataset de análisis; elige una o varias y pulsa
+<b>Insertar variables</b>. Se añadirán sin comillas, separadas por comas, en el cursor.</p>
+<p>Con el envío de salida desactivado puedes leer el resultado local, pero la IA
+no recibe esas cifras para interpretarlas. Activar el envío permite que el endpoint
+las use para continuar la respuesta. La aplicación conserva las salidas y los
+scripts de cada operación en la carpeta de sesión.</p>
+<p>El flujo actual se centra en texto y tablas: el chat omite imágenes y bloquea
+varias operaciones de escritura de archivos. Para elaborar gráficos o exportaciones
+especializadas, trabaja con el script y los datos en una sesión externa de R.</p>
+
+<h2 id="sesiones">Sesiones, informes y herramientas</h2>
+<table>
+<caption>Conservar el análisis y preparar el entorno</caption>
+<thead><tr><th scope="col">Herramienta</th><th scope="col">Cómo se usa</th><th scope="col">Qué conserva o comprueba</th></tr></thead>
+<tbody>
+<tr><td>Guardar sesión</td><td>Archivo → Guardar sesión, o <kbd>Ctrl</kbd> + <kbd>S</kbd>. Elige una ubicación fuera de la carpeta temporal de trabajo.</td><td>Archivo portable <code>.analisisr</code> con datos originales y tratados, reglas, selección, conversación, código y salidas. No incluye las claves del almacén ni del campo API key.</td></tr>
+<tr><td>Abrir sesión</td><td>Archivo → Abrir sesión, o <kbd>Ctrl</kbd> + <kbd>O</kbd>. Se crea una nueva copia de trabajo.</td><td>Restaura el análisis y los cambios pendientes. Mantiene el endpoint actual y las preferencias actuales de ejecutar R y enviar su salida.</td></tr>
+<tr><td>Exportar a Word</td><td>Botón Exportar a Word en Chat y R, menú Archivo → Exportar informe a Word, o <kbd>Ctrl</kbd> + <kbd>Mayús</kbd> + <kbd>E</kbd>.</td><td>Guarda la conversación en un documento con preguntas, interpretación, tablas editables y código R disponible, incluso si no se mostraba en el chat.</td></tr>
+<tr><td>Diagnóstico de R</td><td>Pestaña Entorno R → Comprobar R y paquetes, o Ayuda → Diagnóstico de R y paquetes.</td><td>Ruta de Rscript, versión de R, bibliotecas y estado de los paquetes recomendados. No instala paquetes ni consulta servicios externos.</td></tr>
+<tr><td>Plantillas de consultas</td><td>Selecciona una plantilla y pulsa Usar plantilla. Elige las variables reales en el formulario y pulsa Preparar consulta.</td><td>Inserta nombres sin comillas, separados por comas. No deja campos entre corchetes ni envía la consulta automáticamente.</td></tr>
+<tr><td>Abrir reciente</td><td>En Datos, junto a Importar. Selecciona una ruta de la lista.</td><td>Conserva entre sesiones los últimos cinco archivos de datos importados correctamente, sin duplicados. Si un archivo se ha movido, vuelve a importarlo desde su ubicación actual.</td></tr>
+</tbody></table>
+<p>Las sesiones guardadas pueden contener datos sensibles. El límite es de 1 GiB
+y 10000 archivos por sesión. Guarda antes de cerrar si quieres continuar más adelante.</p>
+<h3>Plantillas con procedimientos e interpretación</h3>
+<p>Las veintisiete plantillas se muestran en orden alfabético y especifican qué estimar, qué hipótesis contrastar y cómo
+interpretar magnitud, precisión y limitaciones. Piden IC del 95 %, tratamiento
+explícito de ausentes y tablas tipo Word. Si no compartes la salida con la IA,
+se solicita que el código R construya un resumen interpretativo local a partir
+de los cálculos. Puedes editar la consulta antes de enviarla.</p>
+<ul>
+<li><b>Acuerdo entre evaluaciones:</b> acuerdo entre evaluadores, instrumentos u ocasiones: coeficiente de correlación intraclase con <a href="https://search.r-project.org/CRAN/refmans/psych/html/ICC.html">psych::ICC</a> eligiendo la forma según el diseño, error típico de medida y mínima diferencia detectable, límites de acuerdo con dos medidas, y kappa simple o ponderado para categorías, advirtiendo de su dependencia de las distribuciones marginales.</li>
+<li><b>Análisis clúster:</b> escalado y distancia según las variables, Ward/k-means o Gower/PAM, elección del número de grupos con silueta y gap cuando proceda, estabilidad y perfiles.</li>
+<li><b>Análisis de supervivencia:</b> tiempo hasta el evento con <a href="https://search.r-project.org/CRAN/refmans/survival/html/coxph.html">survival</a>: Kaplan–Meier con medianas e IC, log-rango, riesgos proporcionales de Cox con razones de riesgo, contraste del supuesto con residuos de Schoenfeld, influencia, concordancia y advertencia sobre censura informativa y riesgos competidores.</li>
+<li><b>Análisis discriminante:</b> LDA, normalidad multivariante, Box M, funciones y separación de grupos; clasificación con validación cruzada y sin fuga de datos.</li>
+<li><b>Análisis factorial confirmatorio:</b> defines las variables latentes que quieras y sus indicadores en el propio formulario, y el modelo se estima con <a href="https://search.r-project.org/CRAN/refmans/lavaan/html/cfa.html">lavaan::cfa</a> dejando libres todas las correlaciones entre latentes. Incluye estimador según la escala (MLR o WLSMV con ítems ordinales), identificación y admisibilidad, ajuste exacto y aproximado (CFI, TLI, RMSEA con IC, SRMR), ajuste local con <code>lavResiduals</code>, cargas estandarizadas con IC, varianza media extraída y fiabilidad compuesta con <a href="https://search.r-project.org/CRAN/refmans/semTools/html/compRelSEM.html">semTools</a>. Con dos o más latentes añade validez discriminante completa: Fornell-Larcker, matrices <b>HTMT y HTMT2</b> con <a href="https://search.r-project.org/CRAN/refmans/semTools/html/htmt.html">semTools::htmt</a> e intervalos de confianza por bootstrap, juzgados por el límite superior frente a 0,85 y 0,90, y el modelo anidado con la correlación fijada a uno. Cierra con un veredicto de validez y fiabilidad por escala según criterios aceptados.</li>
+<li><b>Análisis factorial exploratorio:</b> KMO, Bartlett, correlaciones acordes a la escala, análisis paralelo, extracción de factores comunes y rotación oblicua; cargas, comunalidades y ajuste.</li>
+<li><b>ANCOVA:</b> respuesta continua, grupo y covariables cuantitativas; contraste conjunto de homogeneidad de pendientes, medias ajustadas y diferencias con <a href="https://search.r-project.org/CRAN/refmans/emmeans/html/emmeans.html">emmeans</a>, soporte común, residuos, Breusch–Pagan e inferencia robusta HC3 cuando proceda.</li>
+<li><b>ANOVA:</b> clásico o Welch con justificación, diagnósticos y tamaño de efecto compatible; Tukey o Games–Howell para comparaciones múltiples.</li>
+<li><b>ANOVA de medidas repetidas:</b> diseño mixto con <a href="https://search.r-project.org/CRAN/refmans/afex/html/aov_car.html">afex</a>: formato largo explícito, esfericidad de Mauchly con correcciones de Greenhouse–Geisser y Huynh–Feldt, tamaños de efecto generalizado y parcial, y efectos simples con emmeans cuando la interacción es relevante.</li>
+<li><b>Antes y después:</b> diferencias individuales, t pareada y d<sub>z</sub>, o alternativa justificada; normalidad de las diferencias y respeto del emparejamiento.</li>
+<li><b>Ausentes e imputación múltiple:</b> patrón de ausencia, prueba de Little con <a href="https://search.r-project.org/CRAN/refmans/misty/html/na.test.html">misty</a> y, si procede, imputación múltiple con <a href="https://search.r-project.org/CRAN/refmans/mice/html/mice.html">mice</a>: método por tipo de variable, semilla, comprobación de las imputaciones y combinación por las reglas de Rubin con fracción de información ausente.</li>
+<li><b>Consistencia interna:</b> utiliza coefficientalpha para alfa y omega de puntuaciones observadas, brutos y estandarizados, con IC y cambios al eliminar cada ítem. Añade estimaciones ordinales que distinguen la fiabilidad de las respuestas observadas de la respuesta latente, como explica <a href="https://search.r-project.org/CRAN/refmans/semTools/html/compRelSEM.html">semTools</a>. Conserva la misma muestra en las comparaciones y no invierte ítems sin claves explícitas.</li>
+<li><b>Correlación:</b> Pearson, Spearman o Kendall según escala e hipótesis, IC y sensibilidad a observaciones influyentes; sin interpretación causal.</li>
+<li><b>Curva ROC y capacidad diagnóstica:</b> discriminación de una respuesta binaria con <a href="https://search.r-project.org/CRAN/refmans/pROC/html/roc.html">pROC</a>: caso positivo y dirección declarados, área con IC de DeLong, sensibilidad y especificidad con IC, puntos de corte advirtiendo de su optimismo, comparación de áreas emparejadas y valores predictivos solo con prevalencia justificada.</li>
+<li><b>Descriptivos:</b> resúmenes adecuados a cada escala, IC de medias, frecuencias, porcentajes y alertas de valores atípicos sin eliminarlos.</li>
+<li><b>Diferencia entre medias:</b> t de Welch, Brown–Forsythe, Shapiro–Wilk por grupo y g de Hedges; distingue diferencias de medias de contrastes de rangos.</li>
+<li><b>Fiabilidad:</b> alfa y omega observados con <a href="https://cran.r-project.org/web/packages/coefficientalpha/refman/coefficientalpha.html">coefficientalpha</a>, brutos y estandarizados, errores estándar, IC y contrastes de tau-equivalencia y homogeneidad; análisis paralelo y coeficientes ordinales complementarios cuando procedan.</li>
+<li><b>Invarianza de medida:</b> el modelo de medida que defines, con sus latentes e indicadores, comparado entre grupos con lavaan y <a href="https://search.r-project.org/CRAN/refmans/semTools/html/measEq.syntax.html">semTools</a>: secuencia configural, métrica, escalar y estricta, contrastes corregidos y ΔCFI/ΔRMSEA como orientación, invarianza parcial documentada y comparación de medias latentes solo cuando procede. La normalidad multivariante se comprueba <b>en cada grupo</b> con MVN (Mardia y Henze-Zirkler) y fija un estimador único para toda la secuencia: basta que un grupo la rechace para usar MLR, y los indicadores ordinales llevan WLSMV con umbrales.</li>
+<li><b>Mediación:</b> descomposición de efectos con <a href="https://search.r-project.org/CRAN/refmans/lavaan/html/sem.html">lavaan::sem</a>: senderos a, b y directo, efecto indirecto con IC bootstrap percentil y corregido por sesgo, cautela con la proporción mediada y supuestos causales explícitos, incluida la advertencia sobre diseños transversales.</li>
+<li><b>Modelo multinivel:</b> observaciones agrupadas con <a href="https://search.r-project.org/CRAN/refmans/lme4/html/lmer.html">lme4::lmer</a>: correlación intraclase del modelo nulo, centrado dentro y entre grupos, pendientes aleatorias justificadas, ajustes singulares, IC por perfil o bootstrap y contrastes por verosimilitud en lugar de p inventados.</li>
+<li><b>Moderación:</b> interacción en un modelo lineal con centrado declarado: incremento de R² y f² del término producto, pendientes simples en valores justificados con emmeans::emtrends, región de significación, diagnósticos e inferencia HC3 ante heterocedasticidad.</li>
+<li><b>Regresión:</b> modelo lineal con <a href="https://search.r-project.org/CRAN/refmans/lmtest/html/bptest.html">Breusch–Pagan</a>, HC3,
+<a href="https://search.r-project.org/CRAN/refmans/car/html/vif.html">VIF/GVIF</a>, índices de condición,
+<a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/shapiro.test.html">Shapiro–Wilk</a> de residuos, RESET e influencia. Para respuestas no continuas solicita aclarar el modelo.</li>
+<li><b>Regresión logística:</b> evento y referencia explícitos, separación, OR ajustadas e IC, razón de verosimilitudes, linealidad en el logit, colinealidad, influencia, ROC/AUC y calibración; evaluación aparente y validada diferenciadas.</li>
+<li><b>Regresión multinomial:</b> categorías nominales y referencia explícita, <a href="https://stat.ethz.ch/R-manual/R-devel/library/nnet/html/multinom.html">nnet::multinom</a>, contrastes globales y por término, cocientes de probabilidades relativos a la referencia, IIA, convergencia y validación multiclase.</li>
+<li><b>Regresión ordinal:</b> orden sustantivo de categorías, logit acumulativo con ordinal::clm, <a href="https://search.r-project.org/CRAN/refmans/ordinal/html/nominal.test.html">contrastes de odds proporcionales y de escala</a>, OR acumulativas, umbrales y probabilidades predichas.</li>
+<li><b>Regresión para recuentos:</b> respuesta entera no negativa, Poisson y <a href="https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/glm.nb.html">binomial negativa</a>, dispersión, ceros y diagnósticos; exposición opcional con offset logarítmico. Sin exposición modela recuentos y no inventa tasas.</li>
+<li><b>Tablas de contingencia:</b> observados, esperados y porcentajes; chi-cuadrado, Fisher o Monte Carlo según las condiciones, V de Cramér y odds ratio en tablas 2×2.</li>
+</ul>
+<p>Las pruebas de supuestos no sustituyen la evaluación del diseño. Un resultado
+no significativo no demuestra normalidad, equivalencia ni ausencia de relación.
+Si falta un paquete o una estimación no es posible, la plantilla exige indicarlo
+sin inventar resultados ni cambiar silenciosamente de método.</p>
+<p>En fiabilidad, la estimación convencional usa <code>varphi=0</code>; una
+sensibilidad robusta debe declarar su valor. Los ítems estandarizados se vuelven
+a ajustar tras <code>scale()</code>. En coefficientalpha, <code>drop</code> elimina
+personas; para estudiar la eliminación de un ítem se suprime su columna y se
+reajusta el modelo. Las plantillas distinguen estos procedimientos.</p>
+<p>Las fórmulas estadísticas habituales se muestran con símbolos legibles, por
+ejemplo H₀, μ, ≠ y R², también al exportar a Word. La conversión admite fracciones,
+raíces e índices sencillos y conserva el código R literalmente. Las estructuras
+LaTeX no compatibles se mantienen para no alterar su significado.</p>
+
+<h2 id="procedimientos">Catálogo de procedimientos estadísticos</h2>
+<p>Elige por la pregunta y el diseño, no únicamente por el nombre de una prueba.
+Los enlaces de cada fila llevan a documentación de R o de los autores del paquete.
+<code>stats</code> forma parte de R; los demás paquetes pueden requerir instalación.
+Puedes buscar una técnica con <kbd>Ctrl</kbd> + <kbd>F</kbd> en el navegador.</p>
+<nav aria-label="Familias de procedimientos"><p>
+<a href="#exploracion">Exploración</a> · <a href="#comparaciones">Comparaciones</a> ·
+<a href="#regresion">Regresión</a> · <a href="#psicometria">Psicometría</a> ·
+<a href="#otros">Otros procedimientos</a></p></nav>
+
+<h3 id="exploracion">Exploración, asociación y datos ausentes</h3>
+<table>
+<caption>Describir los datos y preparar el análisis</caption>
+<thead><tr><th scope="col">Procedimiento</th><th scope="col">Para qué se usa y qué revisar</th><th scope="col">Paquetes y funciones recomendados</th></tr></thead>
+<tbody>
+<tr class="procedimiento"><td>Descriptivos</td><td>Resumir medias, desviaciones, medianas, cuantiles y distribución de variables. Identifica valores imposibles y diferencias entre grupos.</td><td><a href="https://personality-project.org/r/psych/">psych</a>: <code>describe()</code>, <code>describeBy()</code>; <code>summary()</code> de R.</td></tr>
+<tr class="procedimiento"><td>Frecuencias y proporciones</td><td>Describir categorías y tablas cruzadas. Informa denominadores, porcentajes y tratamiento de ausentes.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/00Index.html">R y stats</a>: <code>table()</code>, <code>prop.table()</code>, <code>binom.test()</code>.</td></tr>
+<tr class="procedimiento"><td>Correlación</td><td>Cuantificar asociación: Pearson para relación lineal; Spearman o Kendall para asociación por rangos. No implica causalidad.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.test.html">stats</a>: <code>cor()</code>, <code>cor.test()</code>.</td></tr>
+<tr class="procedimiento"><td>Bootstrap</td><td>Estimar incertidumbre mediante remuestreo e intervalos. Respeta parejas, grupos o sujetos al definir el remuestreo.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/boot/html/boot.html">boot</a>: <code>boot()</code>, <code>boot.ci()</code>.</td></tr>
+<tr class="procedimiento"><td>Imputación múltiple</td><td>Crear varios conjuntos imputados y combinar estimaciones. Justifica el mecanismo de ausencia y revisa diagnósticos; no equivale a rellenar con la media.</td><td><a href="https://amices.org/mice/">mice</a>: <code>mice()</code>, <code>pool()</code>.</td></tr>
+</tbody></table>
+
+<h3 id="comparaciones">Comparaciones y contrastes</h3>
+<table>
+<caption>Comparar grupos, condiciones o categorías</caption>
+<thead><tr><th scope="col">Procedimiento</th><th scope="col">Para qué se usa y qué revisar</th><th scope="col">Paquetes y funciones recomendados</th></tr></thead>
+<tbody>
+<tr class="procedimiento"><td>t de Welch</td><td>Comparar la media de dos grupos independientes sin asumir varianzas iguales. Informa diferencia e intervalo de confianza.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/t.test.html">stats</a>: <code>t.test()</code>; <a href="https://easystats.github.io/effectsize/">effectsize</a> para magnitudes estandarizadas.</td></tr>
+<tr class="procedimiento"><td>t para datos pareados</td><td>Comparar dos medidas de las mismas unidades. Conserva el emparejamiento y revisa la distribución de las diferencias.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/t.test.html">stats</a>: <code>t.test(paired=TRUE)</code>.</td></tr>
+<tr class="procedimiento"><td>Mann–Whitney y Wilcoxon</td><td>Contrastar grupos independientes o pares mediante rangos. La interpretación como diferencia de medianas requiere supuestos adicionales.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/wilcox.test.html">stats</a>: <code>wilcox.test()</code>, con <code>paired=TRUE</code> para pares.</td></tr>
+<tr class="procedimiento"><td>ANOVA y ANCOVA</td><td>Comparar medias de varios grupos o ajustar por covariables. Define factores, interacciones y contrastes; revisa residuos y homogeneidad.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/aov.html">stats</a>: <code>aov()</code>, <code>lm()</code>; <a href="https://rvlenth.github.io/emmeans/">emmeans</a> para contrastes ajustados.</td></tr>
+<tr class="procedimiento"><td>ANOVA de medidas repetidas</td><td>Comparar momentos o condiciones dentro de cada sujeto, también con factores entre sujetos. Identifica sujeto y estructura del diseño.</td><td><a href="https://search.r-project.org/CRAN/refmans/afex/html/afex-package.html">afex</a>: <code>aov_ez()</code>; <a href="https://rvlenth.github.io/emmeans/">emmeans</a>.</td></tr>
+<tr class="procedimiento"><td>Kruskal–Wallis</td><td>Comparar grupos independientes mediante rangos. Un contraste global no identifica qué parejas difieren: planifica comparaciones y ajuste por multiplicidad.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kruskal.test.html">stats</a>: <code>kruskal.test()</code>, <code>pairwise.wilcox.test()</code>.</td></tr>
+<tr class="procedimiento"><td>Friedman</td><td>Comparar condiciones relacionadas con un diseño por bloques. Mantén la identificación del sujeto y revisa el tratamiento de bloques incompletos.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/friedman.test.html">stats</a>: <code>friedman.test()</code>.</td></tr>
+<tr class="procedimiento"><td>Chi-cuadrado y Fisher</td><td>Estudiar asociación entre variables categóricas. Revisa frecuencias esperadas y usa un contraste exacto cuando corresponda.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/chisq.test.html">stats</a>: <code>chisq.test()</code>, <code>fisher.test()</code>; <a href="https://easystats.github.io/effectsize/">effectsize</a> para magnitud.</td></tr>
+</tbody></table>
+
+<h3 id="regresion">Regresión, predicción y datos agrupados</h3>
+<table>
+<caption>Modelar una respuesta según su escala y estructura</caption>
+<thead><tr><th scope="col">Procedimiento</th><th scope="col">Para qué se usa y qué revisar</th><th scope="col">Paquetes y funciones recomendados</th></tr></thead>
+<tbody>
+<tr class="procedimiento"><td>Regresión lineal</td><td>Relacionar una respuesta continua con uno o varios predictores. Revisa linealidad, residuos, influencia y colinealidad.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html">stats</a>: <code>lm()</code>, <code>confint()</code>.</td></tr>
+<tr class="procedimiento"><td>Regresión logística binaria</td><td>Modelar la probabilidad de un resultado con dos categorías. Especifica la categoría del evento y distingue odds ratios de riesgos relativos.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html">stats</a>: <code>glm(family=binomial)</code>.</td></tr>
+<tr class="procedimiento"><td>Regresión multinomial</td><td>Modelar una respuesta nominal con más de dos categorías. Define la categoría de referencia y revisa categorías escasas.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/nnet/html/multinom.html">nnet</a>: <code>multinom()</code>.</td></tr>
+<tr class="procedimiento"><td>Regresión ordinal</td><td>Modelar categorías ordenadas. Comprueba el supuesto de odds proporcionales cuando uses el enlace logit y ese modelo lo imponga.</td><td><a href="https://search.r-project.org/CRAN/refmans/ordinal/html/ordinal-package.html">ordinal</a>: <code>clm()</code>, <code>clmm()</code>.</td></tr>
+<tr class="procedimiento"><td>Regresión de Poisson</td><td>Modelar recuentos o tasas. Revisa exposición, offset y sobredispersión antes de interpretar los coeficientes.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html">stats</a>: <code>glm(family=poisson)</code>.</td></tr>
+<tr class="procedimiento"><td>Regresión binomial negativa</td><td>Modelar recuentos con variabilidad adicional respecto a Poisson. Contrasta su adecuación y la estructura de ceros.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/glm.nb.html">MASS</a>: <code>glm.nb()</code>.</td></tr>
+<tr class="procedimiento"><td>Modelo lineal mixto</td><td>Analizar respuestas continuas con sujetos repetidos o unidades anidadas. Define interceptos y pendientes aleatorias según el diseño.</td><td><a href="https://lme4.github.io/lme4/">lme4</a>: <code>lmer()</code>; <a href="https://rvlenth.github.io/emmeans/">emmeans</a>.</td></tr>
+<tr class="procedimiento"><td>Modelo mixto generalizado</td><td>Modelar respuestas binarias o recuentos con dependencia entre observaciones. Comprueba convergencia y estructura aleatoria.</td><td><a href="https://lme4.github.io/lme4/">lme4</a>: <code>glmer()</code>; <a href="https://search.r-project.org/CRAN/refmans/glmmTMB/html/glmmTMB.html">glmmTMB</a>.</td></tr>
+<tr class="procedimiento"><td>Recuentos con inflación de ceros</td><td>Separar un proceso adicional que genera ceros del proceso de recuento. Muchos ceros por sí solos no justifican este modelo.</td><td><a href="https://search.r-project.org/CRAN/refmans/glmmTMB/html/glmmTMB.html">glmmTMB</a>: <code>glmmTMB()</code>, argumento <code>ziformula</code>.</td></tr>
+</tbody></table>
+
+<h3 id="psicometria">Psicometría, dimensiones y modelos de relaciones</h3>
+<table>
+<caption>Escalas, variables latentes y relaciones entre variables</caption>
+<thead><tr><th scope="col">Procedimiento</th><th scope="col">Para qué se usa y qué revisar</th><th scope="col">Paquetes y funciones recomendados</th></tr></thead>
+<tbody>
+<tr class="procedimiento"><td>Consistencia interna: alfa y omega</td><td>Estimar fiabilidad de puntuaciones observadas, con versiones brutas y estandarizadas, errores estándar e IC. Para ordinales distingue puntuación observada y respuesta latente; revisa dimensionalidad y claves de inversión.</td><td><a href="https://cran.r-project.org/web/packages/coefficientalpha/refman/coefficientalpha.html">coefficientalpha</a>: <code>alpha()</code>, <code>omega()</code>, <code>tau.test()</code> y <code>bootstrap()</code>. psych, lavaan y semTools para diagnósticos y estimaciones ordinales complementarias.</td></tr>
+<tr class="procedimiento"><td>Componentes principales (PCA)</td><td>Reducir variables a combinaciones que resumen su variación. Decide si hay que estandarizar; no es un modelo factorial de variables latentes.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html">stats</a>: <code>prcomp()</code>.</td></tr>
+<tr class="procedimiento"><td>Análisis factorial exploratorio</td><td>Explorar factores comunes, cargas y rotaciones. Justifica el número de factores y el tipo de correlación para ítems ordinales.</td><td><a href="https://personality-project.org/r/psych/">psych</a>: <code>fa()</code>, <code>fa.parallel()</code>, <code>polychoric()</code>.</td></tr>
+<tr class="procedimiento"><td>Análisis factorial confirmatorio</td><td>Contrastar una estructura factorial definida previamente, con una o varias variables latentes correlacionadas. Revisa identificación, estimador, cargas, residuos y ajuste. El estimador se justifica con pruebas de normalidad multivariante: MLR si se rechaza, WLSMV con los indicadores ordinales declarados.</td><td><a href="https://lavaan.ugent.be/">lavaan</a>: <code>cfa()</code>, <code>lavResiduals()</code>, <code>standardizedSolution()</code>; <a href="https://cran.r-project.org/web/packages/MVN/index.html">MVN</a>: <code>mvn(mvn_test = &quot;mardia&quot;)</code> y <code>mvn(mvn_test = &quot;hz&quot;)</code>.</td></tr>
+<tr class="procedimiento"><td>Fiabilidad y validez de las escalas</td><td>Valorar si cada escala mide de forma fiable y distinta de las demás: fiabilidad compuesta, varianza media extraída, Fornell-Larcker y razón heterorrasgo-monorrasgo con intervalos de confianza. Se juzga por el límite superior del intervalo, no por la estimación puntual.</td><td><a href="https://search.r-project.org/CRAN/refmans/semTools/html/compRelSEM.html">semTools</a>: <code>compRelSEM()</code> y <code>htmt()</code> con <code>htmt2</code>; <code>boot</code> para los intervalos.</td></tr>
+<tr class="procedimiento"><td>SEM y mediación</td><td>Estimar relaciones directas e indirectas entre variables observadas o latentes. La interpretación causal exige diseño y supuestos adicionales.</td><td><a href="https://lavaan.ugent.be/">lavaan</a>: <code>sem()</code> y parámetros definidos para efectos indirectos.</td></tr>
+<tr class="procedimiento"><td>Moderación e interacciones</td><td>Evaluar si una asociación cambia según otra variable. Define el término de interacción y examina efectos condicionales.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html">stats</a>: <code>lm()</code>; <a href="https://rvlenth.github.io/emmeans/">emmeans</a>: <code>emtrends()</code>.</td></tr>
+<tr class="procedimiento"><td>Acuerdo entre evaluadores</td><td>Cuantificar coincidencia entre evaluadores, instrumentos u ocasiones. El coeficiente depende del diseño y de si interesa el acuerdo absoluto o la consistencia; kappa depende de las distribuciones marginales y el acuerdo no es validez.</td><td><a href="https://search.r-project.org/CRAN/refmans/psych/html/ICC.html">psych</a>: <code>ICC()</code> y <code>cohen.kappa()</code>; error típico de medida derivado de las varianzas.</td></tr>
+<tr class="procedimiento"><td>Invarianza de medida</td><td>Evaluar restricciones de un modelo factorial entre grupos. La secuencia y la identificación dependen de si los indicadores son continuos u ordinales.</td><td><a href="https://lavaan.ugent.be/tutorial/groups.html">lavaan</a>: modelos multigrupo con <code>group</code> y <code>group.equal</code>.</td></tr>
+</tbody></table>
+
+<h3 id="otros">Clasificación, tiempo, agrupación y síntesis</h3>
+<table>
+<caption>Otros procedimientos habituales</caption>
+<thead><tr><th scope="col">Procedimiento</th><th scope="col">Para qué se usa y qué revisar</th><th scope="col">Paquetes y funciones recomendados</th></tr></thead>
+<tbody>
+<tr class="procedimiento"><td>ROC y AUC</td><td>Cuantificar discriminación de un marcador para dos clases. Define caso/control y dirección; valida fuera de los datos usados para ajustar.</td><td><a href="https://xrobin.github.io/pROC/">pROC</a>: <code>roc()</code>, <code>auc()</code>, <code>ci.auc()</code>. Solicita resultados numéricos en el chat.</td></tr>
+<tr class="procedimiento"><td>Kaplan–Meier</td><td>Estimar supervivencia con observaciones censuradas. Define origen temporal, evento y censura; pide tablas de probabilidades y sujetos en riesgo.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/survival/html/survfit.html">survival</a>: <code>Surv()</code>, <code>survfit()</code>.</td></tr>
+<tr class="procedimiento"><td>Regresión de Cox</td><td>Relacionar covariables con el tiempo hasta un evento. Revisa proporcionalidad de riesgos y codificación del evento.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/survival/html/coxph.html">survival</a>: <code>coxph()</code>, <code>cox.zph()</code>.</td></tr>
+<tr class="procedimiento"><td>Clústeres</td><td>Agrupar casos por semejanza sin etiquetas previas. Decide distancia, escala y número de grupos; evalúa estabilidad.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html">stats</a>: <code>kmeans()</code>; <a href="https://stat.ethz.ch/R-manual/R-devel/library/cluster/html/pam.html">cluster</a>: <code>pam()</code>.</td></tr>
+<tr class="procedimiento"><td>Series temporales ARIMA</td><td>Modelar dependencia temporal y obtener pronósticos. Ordena los datos, define frecuencia, revisa estacionariedad y residuos, y valida respetando el tiempo.</td><td><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/arima.html">stats</a>: <code>arima()</code>, <code>predict()</code>.</td></tr>
+<tr class="procedimiento"><td>Metaanálisis y metarregresión</td><td>Sintetizar efectos de estudios con sus varianzas. Especifica la medida de efecto, heterogeneidad y dependencia entre estimaciones.</td><td><a href="https://wviechtb.github.io/metafor/">metafor</a>: <code>escalc()</code>, <code>rma()</code>, <code>rma.mv()</code>.</td></tr>
+</tbody></table>
+<div class="nota"><p><b>Antes de interpretar:</b> revisa tamaño muestral efectivo,
+faltantes, supuestos, convergencia y unidades. Para comparaciones múltiples elige
+un ajuste. Solicita tamaños de efecto e intervalos de confianza. Un valor p no
+resume la relevancia práctica ni demuestra causalidad.</p></div>
+
+<h2 id="paquetes">Preparar los paquetes de R</h2>
+<p><b>Comprobar R y paquetes</b>, en la pestaña Entorno R (también en Ayuda →
+Diagnóstico de R y paquetes), confirma una a una todas las bibliotecas que AnalisisR
+puede necesitar y muestra la versión de cada una o «No instalado», además de indicar
+si están todas disponibles. La lista comprobada es exactamente esta:</p>
+<p id="paquetes-comprobados"><code>stats</code>, <code>boot</code>, <code>MASS</code>,
+<code>nnet</code>, <code>cluster</code>, <code>survival</code>, <code>psych</code>,
+<code>coefficientalpha</code>, <code>effectsize</code>, <code>emmeans</code>,
+<code>afex</code>, <code>lme4</code>, <code>ordinal</code>, <code>glmmTMB</code>,
+<code>lavaan</code>, <code>semTools</code>, <code>lavaangui</code>, <code>misty</code>,
+<code>mice</code>, <code>pROC</code>, <code>metafor</code>, <code>MVN</code>, <code>readxl</code>,
+<code>haven</code> y <code>jsonlite</code>.</p>
+<p><code>stats</code>, <code>boot</code>, <code>MASS</code>, <code>nnet</code>,
+<code>cluster</code> y <code>survival</code> vienen con R; los demás se instalan.</p>
+<p>Instala solo los paquetes que necesites, desde una consola de R o RStudio,
+<b>fuera del chat de AnalisisR</b>. La aplicación bloquea
+<code>install.packages()</code> en el código generado. Por ejemplo:</p>
+<pre><code># Ejecutar en una consola de R, una vez:
+install.packages(c("coefficientalpha", "psych", "effectsize", "emmeans"),
+                 repos = "https://cloud.r-project.org")
+
+# Solo si necesitas importar Excel o archivos de SPSS/Stata/SAS:
+install.packages(c("readxl", "haven", "jsonlite"),
+                 repos = "https://cloud.r-project.org")</code></pre>
+<p>El análisis factorial confirmatorio comprueba la normalidad multivariante con
+<a href="https://cran.r-project.org/web/packages/MVN/index.html">MVN</a> (Mardia y
+Henze-Zirkler) para justificar el estimador: MLR cuando se rechaza la normalidad y WLSMV
+con las variables ordinales declaradas.</p>
+<p>Para modelos especializados añade el paquete correspondiente: por ejemplo,
+<code>lavaan</code>, <code>lme4</code>, <code>ordinal</code>, <code>glmmTMB</code>,
+<code>mice</code>, <code>pROC</code> o <code>metafor</code>. Algunos paquetes pueden
+necesitar herramientas de compilación según tu sistema y la versión de R.</p>
+<p>Comprueba que la instalación corresponda al R que usa la aplicación. Puedes
+pedir a AnalisisR que imprima <code>R.version.string</code>, <code>.libPaths()</code>
+y <code>packageVersion("psych")</code>. La IA puede consultar la ayuda de la versión
+instalada cuando necesita confirmar una función.</p>
+
+<h2 id="ejemplos">Ejemplos de consultas</h2>
+<p>Adapta los nombres a tus columnas y expresa el diseño real. Estos ejemplos son
+peticiones, no resultados ya calculados.</p>
+<h3>Descriptivos por grupo</h3>
+<blockquote><p>Resume edad y puntuacion por grupo: n válido, ausentes, media, desviación,
+mediana y rango intercuartílico. Presenta una tabla y explica las diferencias descriptivas.</p></blockquote>
+<h3>Comparación antes y después</h3>
+<blockquote><p>Las columnas antes y despues pertenecen a las mismas personas. Compara
+las puntuaciones con una t pareada, revisa las diferencias e informa su media,
+IC del 95 %, valor p y tamaño de efecto. No trates las medidas como grupos independientes.</p></blockquote>
+<h3>Predicción de una respuesta binaria</h3>
+<blockquote><p>Modela respuesta (0 = no, 1 = sí) a partir de edad y grupo con regresión
+logística. Usa control como referencia de grupo. Presenta odds ratios, IC del 95 %,
+tamaño muestral analizado y advertencias de ajuste.</p></blockquote>
+<h3>Fiabilidad de una escala</h3>
+<blockquote><p>Los ítems x1 a x8 forman una escala de 1 a 5 y x3 ya se ha invertido
+en la pestaña Datos. Estima alfa y omega con coefficientalpha, sobre ítems brutos
+y estandarizados, con errores estándar, IC y contrastes de sus supuestos. Revisa la estructura y los
+faltantes antes de interpretar la consistencia interna. No vuelvas a invertir x3.</p></blockquote>
+
+<h2 id="privacidad">Privacidad y archivos de sesión</h2>
+<p>El endpoint recibe el diccionario de variables sin filas, el texto que escribes
+y el historial de conversación. Los nombres y etiquetas de variables también
+pueden contener información sensible: revísalos antes de usar un servicio externo.</p>
+<p>La salida de R permanece local salvo que actives su envío. Esa salida puede
+contener datos individuales si el análisis los imprime. Al desactivar el envío,
+la aplicación utiliza en el historial una indicación de que se calculó localmente,
+en lugar de reenviar la salida privada.</p>
+<p>Las claves se guardan en la configuración propia de AnalisisR mediante el
+gestor de credenciales disponible o cifrado. No se importan automáticamente los
+perfiles de Verosímil. En Windows se usa DPAPI cuando no hay gestor; en otros
+sistemas puede requerirse <code>ANALISISR_MASTER_KEY</code> para Fernet.</p>
+<p><b>Limpieza de temporales.</b> Al finalizar cada operación, incluso con error
+o cancelación, AnalisisR conserva en memoria los datos, scripts y registros y
+elimina su carpeta temporal de disco. Los archivos se crean de nuevo solo cuando
+se necesitan para otra operación o para guardar una sesión. La exportación a Word
+y Mostrar código R siguen disponibles. Al cerrar se detiene el proceso activo,
+se elimina cualquier archivo propio restante y se descarta la memoria. Guarda
+una sesión desde Archivo si quieres continuar más adelante.</p>
+<p>Todos los temporales de la aplicación y sus procesos R se crean en
+<code>temporales</code>, dentro del directorio del programa: por defecto
+<code>C:\AnalisisR\temporales</code>. Esta ubicación requiere permiso de escritura.
+Para guardar sesiones en otra unidad, utiliza un nombre nuevo; así se conserva
+cualquier archivo anterior sin crear temporales fuera de la instalación.</p>
+<p>La limpieza se limita a carpetas creadas por esta instancia; conserva archivos
+originales e informes guardados y no recorre carpetas de otras sesiones. Si no
+puede limpiar por archivos bloqueados o por superar 1 GiB/10000 archivos en
+memoria, muestra el problema en el registro sin descartar los archivos de trabajo.</p>
+<p><b>Análisis por etapas.</b> Cada turno admite seis propuestas de código R y
+tres consultas de ayuda independientes, seguidas de una respuesta final sin más
+ejecución. Cada script empieza en una sesión R nueva. Si la IA no termina la
+interpretación, se conservan los resultados calculados y se muestra el último
+error, indicando que el análisis está incompleto.</p>
+<div class="nota"><p><b>Ejecución local:</b> el código generado corre con tus permisos.
+El filtro de operaciones restringe varias llamadas al sistema, red y escritura,
+pero no constituye una caja de aislamiento de seguridad. Revisa el código y no
+interpretes resultados fallidos o truncados como un análisis terminado.</p></div>
+
+<h2 id="problemas">Solución de problemas</h2>
+<table>
+<caption>Comprobaciones habituales</caption>
+<thead><tr><th scope="col">Situación</th><th scope="col">Qué hacer</th><th scope="col">Dónde comprobarlo</th></tr></thead>
+<tbody>
+<tr><td>No se encuentra Rscript</td><td>Instala R 4.x. Se busca en <code>R_HOME</code>, en la carpeta indicada en Entorno R, en el <code>PATH</code> y en las instalaciones habituales (<code>C:/Program Files/R</code>). Indica la carpeta en Entorno R y pulsa Volver a detectar.</td><td>Equipo local y registro de la operación.</td></tr>
+<tr><td>Falta un paquete</td><td>Instálalo desde una consola de R y comprueba que esté en las bibliotecas del R usado por AnalisisR.</td><td>Sección <a href="#paquetes">Preparar los paquetes</a>.</td></tr>
+<tr><td>Error de conexión o autorización</td><td>Comprueba URL, proveedor, clave y acceso al modelo. Para un servidor local verifica que esté en ejecución.</td><td>Resultado de Probar conexión, en Endpoints IA.</td></tr>
+<tr><td>El modelo no aparece en el listado</td><td>Copia un identificador válido de los modelos disponibles o verifica los permisos con tu proveedor.</td><td>Modelo configurado y avisos de conexión.</td></tr>
+<tr><td>Los tipos vuelven a los detectados</td><td>Aplica el tratamiento: los tipos se guardan en un archivo <code>.analisisr.json</code> junto a los datos. Si lo borras o mueves los datos sin él, se recalculan con la heurística.</td><td>Registro de la operación y pestaña Datos.</td></tr>
+<tr><td>Tratamiento pendiente</td><td>Aplica la selección y recodificación después de cambiar variables o reglas.</td><td>Pestaña Datos.</td></tr>
+<tr><td>Error de sintaxis en R</td><td>La aplicación intenta corregirlo antes de ejecutar. Tras tres errores consecutivos detiene los reintentos y muestra el diagnóstico; no lo presenta como un cálculo completado.</td><td>Diagnóstico en el chat y registros conservados en la sesión en memoria; usa Guardar sesión para conservarlos en disco.</td></tr>
+<tr><td>Análisis sin interpretación final</td><td>Consulta las tablas obtenidas y el último error mostrado. El análisis puede estar incompleto; no deduzcas coeficientes que no se hayan calculado.</td><td>Chat y R y registros de la sesión en memoria.</td></tr>
+<tr><td>Respuesta truncada o sin resultado final</td><td>Revisa Máx. tokens, el tiempo de operación y los archivos de salida. Simplifica la consulta o divide el análisis.</td><td>Endpoints IA y archivos de sesión.</td></tr>
+<tr><td>Resultado local sin interpretación</td><td>Lee la tabla local. Si deseas interpretación por IA, revisa su contenido y decide si autorizas compartir la salida para una nueva consulta.</td><td>Casilla de envío de salida, en Chat y R.</td></tr>
+</tbody></table>
+
+<h2 id="autoria">Autoría y condiciones de uso</h2>
+<p>AnalisisR 1.0 ha sido desarrollado por <b>Eulogio Cordón en 2026</b>.
+El software es de <b>uso libre y gratuito para investigación y docencia</b>.</p>
+
+<h2 id="fuentes">Documentación de referencia</h2>
+<p>Las recomendaciones se apoyan en los manuales de R y la documentación de los
+autores de los paquetes enlazados en cada procedimiento. Las páginas externas
+requieren conexión; el contenido de esta guía se puede leer sin red.</p>
+<ul>
+<li><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/00Index.html">Manual de stats</a>: pruebas, regresión, componentes principales y series temporales.</li>
+<li><a href="https://personality-project.org/r/psych/">psych</a> y <a href="https://lavaan.ugent.be/">lavaan</a>: psicometría y variables latentes.</li>
+<li><a href="https://lme4.github.io/lme4/">lme4</a> y <a href="https://rvlenth.github.io/emmeans/">emmeans</a>: modelos mixtos y contrastes.</li>
+<li><a href="https://amices.org/mice/">mice</a>, <a href="https://xrobin.github.io/pROC/">pROC</a> y <a href="https://wviechtb.github.io/metafor/">metafor</a>: imputación, discriminación y síntesis.</li>
+</ul>
+<p>Los enlaces del manual R-devel pueden describir una versión más reciente que
+la instalada. Para ejecutar, contrasta la firma y los argumentos con la ayuda
+de tu instalación; no es necesario instalar versiones de desarrollo.</p>
+</article>
+<footer>AnalisisR · Guía local de uso. Recomendaciones de paquetes consultadas el
+5 de noviembre de 2026. Estilo adaptado de la guía de Verosímil; contenido específico
+de AnalisisR.</footer>
+</main>
+<a class="subir" href="#inicio" aria-label="Volver al inicio de la guía" title="Volver al inicio">↑</a>
+</body>
+</html>

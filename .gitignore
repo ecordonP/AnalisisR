@@ -1,0 +1,15 @@
+__pycache__/
+.pytest_cache/
+.test-tmp/
+*.pyc
+build/
+dist/
+.pyarmor/
+temporales/
+build_*.log
+
+# Notas para otros agentes: describen un estado anterior del proyecto y no se publican
+# hasta actualizarlas.
+AGENTS.md
+# Metadatos de tipos que genera la aplicación junto a los datos del usuario.
+*.analisisr.json
