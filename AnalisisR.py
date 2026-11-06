@@ -1274,6 +1274,7 @@ def create_window():
             self.closing = False
             self.job = 0
             self.r_ready = False
+            self.template_query = None
             self.tabs = ui.QTabWidget()
             self.setCentralWidget(self.tabs)
             self.build_environment()
@@ -1643,8 +1644,13 @@ def create_window():
             for field in fields:
                 if field in opciones:
                     widget = ui.QListWidget()
-                    widget.addItems(opciones[field])
-                    widget.setSelectionMode(ui.QAbstractItemView.MultiSelection)
+                    widget.setSelectionMode(ui.QAbstractItemView.NoSelection)
+                    for texto in opciones[field]:
+                        casilla = ui.QListWidgetItem(texto)
+                        casilla.setFlags((casilla.flags() | ui.Qt.ItemIsUserCheckable)
+                                         & ~ui.Qt.ItemIsSelectable)
+                        casilla.setCheckState(ui.Qt.Unchecked)
+                        widget.addItem(casilla)
                 elif field == "factores":
                     widget = ui.FactorBuilder(columns)
                 elif field in ("variables", "predictores", "ítems", "covariables", "medidas", "evaluaciones"):
@@ -1665,7 +1671,9 @@ def create_window():
 
             def accept():
                 for field, widget in widgets.items():
-                    chosen = ([widget.text()] if isinstance(widget, ui.FactorBuilder) and widget.factors
+                    chosen = ([widget.item(i).text() for i in range(widget.count())
+                               if widget.item(i).checkState() == ui.Qt.Checked] if field in opciones
+                              else [widget.text()] if isinstance(widget, ui.FactorBuilder) and widget.factors
                               else [] if isinstance(widget, ui.FactorBuilder)
                               else [item.text() for item in widget.selectedItems()] if isinstance(widget, ui.QListWidget)
                               else ([widget.currentText()] if widget.currentIndex() > 0 else []))
@@ -1734,6 +1742,8 @@ def create_window():
                               lambda m: (", ".join(selections[m[1]]) or "no especificada")
                               if m[1] in selections else m[0], text)
                 self.question.setPlainText(text)
+                # El prompt de la plantilla no se muestra en el chat: solo su nombre.
+                self.template_query = (name, text.strip())
                 self.question.setFocus()
 
         def save_session(self):
@@ -2041,13 +2051,18 @@ def create_window():
                                         for turn in self.history],
                                run_r=self.run_r.isChecked(), share_output=self.share.isChecked(),
                                show_code=self.show_code.isChecked())
-                ui.render_chat(self.chat, "Tú", request["ask"])
+                plantilla = (self.template_query[0] if self.template_query
+                             and self.template_query[1] == request["ask"] else None)
+                etiqueta = "Análisis solicitado: " + plantilla if plantilla else request["ask"]
+                ui.render_chat(self.chat, "Tú",
+                               "Realizando análisis solicitado… Espere por favor."
+                               if plantilla else request["ask"])
                 self.start("chat", request, lambda result: self.answered(
-                    request["ask"], result, request["show_code"]))
+                    request["ask"], result, request["show_code"], etiqueta))
             except ValueError as exc:
                 ui.QMessageBox.warning(self, "Datos pendientes", str(exc))
 
-        def answered(self, question, result, show_code=False):
+        def answered(self, question, result, show_code=False, display=None):
             answer = result["answer"]
             code_displayed = False
             if show_code and result.get("scripts"):
@@ -2057,7 +2072,8 @@ def create_window():
                     code_displayed = True
                 except OSError as exc:
                     self.log.appendPlainText(f"No se pudo leer el código R: {exc}")
-            self.history.extend([{"role": "user", "content": question},
+            self.history.extend([{"role": "user", "content": display or question,
+                                  "context": question},
                                  {"role": "assistant", "content": answer,
                                   "scripts": result.get("scripts", []), "code_displayed": code_displayed,
                                   "context": result.get("context_answer", result["answer"])}])

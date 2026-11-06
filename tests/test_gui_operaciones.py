@@ -300,7 +300,11 @@ def test_plantillas_rellenan_nombres_reales_sin_corchetes_ni_envio(window, monke
                        [1, 2] if widget.objectName() == "predictores" else
                        [0, 1, 2] if name == "Análisis factorial exploratorio" else [0, 1])
             for index in indices:
-                widget.item(index).setSelected(True)
+                # Las listas de casillas no son seleccionables: hay que marcarlas.
+                if widget.item(index).flags() & ui.Qt.ItemIsSelectable:
+                    widget.item(index).setSelected(True)
+                else:
+                    widget.item(index).setCheckState(ui.Qt.Checked)
         for widget in dialog.findChildren(ui.QComboBox):
             widget.setCurrentIndex(0 if widget.objectName() == "exposición" else
                                    3 if widget.objectName() in ("grupo", "mediador", "moderador",

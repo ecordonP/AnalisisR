@@ -69,7 +69,14 @@ def test_el_formulario_ofrece_las_pruebas_disponibles_en_mvn(ventana, monkeypatc
         for lista in dialog.findChildren(ui.QListWidget):
             nombre = lista.objectName()
             ofrecidas[nombre] = [lista.item(i).text() for i in range(lista.count())]
-            assert lista.selectionMode() == ui.QAbstractItemView.MultiSelection
+            if nombre.startswith("pruebas_"):
+                # Casillas: no se selecciona la fila, se marca cada prueba.
+                assert lista.selectionMode() == ui.QAbstractItemView.NoSelection
+                for i in range(lista.count()):
+                    assert lista.item(i).checkState() == ui.Qt.Unchecked
+                    assert lista.item(i).flags() & ui.Qt.ItemIsUserCheckable
+            else:
+                assert lista.selectionMode() == ui.QAbstractItemView.MultiSelection
         dialog.reject()
         return dialog.result()
 
@@ -91,9 +98,9 @@ def test_la_consulta_recoge_solo_las_pruebas_seleccionadas(ventana, monkeypatch)
         dialog.findChild(ui.QListWidget, "variables").item(0).setSelected(True)
         dialog.findChild(ui.QListWidget, "variables").item(1).setSelected(True)
         multi = dialog.findChild(ui.QListWidget, "pruebas_multivariantes")
-        multi.item(0).setSelected(True)   # Mardia
-        multi.item(3).setSelected(True)   # Royston
-        dialog.findChild(ui.QListWidget, "pruebas_univariantes").item(2).setSelected(True)  # AD
+        multi.item(0).setCheckState(ui.Qt.Checked)   # Mardia
+        multi.item(3).setCheckState(ui.Qt.Checked)   # Royston
+        dialog.findChild(ui.QListWidget, "pruebas_univariantes").item(2).setCheckState(ui.Qt.Checked)
         dialog.findChild(ui.QDialogButtonBox).accepted.emit()
         return dialog.result()
 
@@ -121,8 +128,8 @@ def test_una_sola_variable_no_permite_pruebas_multivariantes(ventana, monkeypatc
 
     def elegir(dialog):
         dialog.findChild(ui.QListWidget, "variables").item(0).setSelected(True)
-        dialog.findChild(ui.QListWidget, "pruebas_multivariantes").item(1).setSelected(True)
-        dialog.findChild(ui.QListWidget, "pruebas_univariantes").item(0).setSelected(True)
+        dialog.findChild(ui.QListWidget, "pruebas_multivariantes").item(1).setCheckState(ui.Qt.Checked)
+        dialog.findChild(ui.QListWidget, "pruebas_univariantes").item(0).setCheckState(ui.Qt.Checked)
         dialog.findChild(ui.QDialogButtonBox).accepted.emit()
         return dialog.result()
 
@@ -167,3 +174,47 @@ def test_la_conclusion_no_puede_contradecir_al_p():
     assert "marcas Unicode" in prompt
     for otra in ("Análisis factorial confirmatorio", "Invarianza de medida"):
         assert "no puede presentarse como que no se rechaza" in app.TEMPLATES[otra], otra
+
+
+def test_al_enviar_una_plantilla_no_se_muestra_el_prompt(ventana, monkeypatch):
+    """El chat solo anuncia la espera; el prompt completo viaja al endpoint como contexto."""
+    view, ui = ventana
+
+    def elegir(dialog):
+        for i in (0, 1):
+            dialog.findChild(ui.QListWidget, "variables").item(i).setSelected(True)
+        dialog.findChild(ui.QListWidget, "pruebas_multivariantes").item(0).setCheckState(ui.Qt.Checked)
+        dialog.findChild(ui.QListWidget, "pruebas_univariantes").item(0).setCheckState(ui.Qt.Checked)
+        dialog.findChild(ui.QDialogButtonBox).accepted.emit()
+        return dialog.result()
+
+    monkeypatch.setattr(ui.QDialog, "exec", elegir)
+    view.templates.setCurrentText("Normalidad")
+    view.use_template()
+    prompt = view.question.toPlainText()
+    assert "MVN" in prompt
+
+    view.send_chat()
+    assert view.proc is not None
+    enviado = app.json.loads((view.folder / "operacion_001" / "request.json").read_text(encoding="utf-8"))
+    assert enviado["ask"] == prompt.strip(), "el endpoint debe recibir el prompt íntegro"
+    conversacion = view.chat.toPlainText()
+    assert "Realizando análisis solicitado" in conversacion and "Espere por favor" in conversacion
+    assert "MVN" not in conversacion and "mvn_test" not in conversacion
+
+    # Tras la respuesta, el historial muestra la plantilla, nunca el prompt.
+    app.write_json(view.folder / "operacion_001" / "result.json", {"answer": "Resultado"})
+    view.proc.done.emit(0)
+    turno = view.history[0]
+    assert turno["content"] == "Análisis solicitado: Normalidad"
+    assert turno["context"] == prompt.strip()
+    assert "MVN" not in view.chat.toPlainText()
+
+
+def test_una_consulta_escrita_a_mano_si_se_muestra(ventana, monkeypatch):
+    view, ui = ventana
+    view.question.setPlainText("Describe las variables x e y")
+    view.send_chat()
+    assert view.proc is not None
+    assert "Describe las variables x e y" in view.chat.toPlainText()
+    assert "Realizando análisis solicitado" not in view.chat.toPlainText()

@@ -40,6 +40,9 @@ necesaria y no permite ninguna operación.
 
 ### Análisis con R
 
+- Al enviar una consulta hecha con plantilla, el chat muestra solo **Realizando análisis
+  solicitado… Espere por favor** y luego el nombre de la plantilla, nunca el texto completo
+  del prompt; el endpoint sí lo recibe íntegro.
 - 28 plantillas de consulta que detallan estimandos, supuestos, contrastes,
   diagnósticos, tamaños de efecto e interpretación, y que se rellenan con tus variables
   reales desde un formulario.
