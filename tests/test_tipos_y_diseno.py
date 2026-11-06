@@ -201,3 +201,16 @@ def test_la_correlacion_admite_varias_variables_y_elige_el_metodo():
     for pieza in ("todos los pares", "par a par", "Shapiro–Wilk", "MVN::mvn",
                   "punto-biserial", "phi", "V de Cramer", "k(k-1)/2", "Holm"):
         assert pieza in prompt, pieza
+
+
+def test_levene_recibe_el_grupo_como_factor():
+    """Las binarias llegan como 0/1: con una columna numérica car::leveneTest se detiene."""
+    for name in ("Diferencia entre medias", "ANOVA"):
+        prompt = app.TEMPLATES[name]
+        assert "factor(grupo), center = median" in prompt, name
+        assert "not appropriate with quantitative explanatory variables" in prompt, name
+
+
+def test_ninguna_plantilla_permite_objetos_numerados_por_grupo():
+    for name, prompt in app.TEMPLATES.items():
+        assert "desc_g1" in prompt and "do.call(rbind, ...)" in prompt, name
