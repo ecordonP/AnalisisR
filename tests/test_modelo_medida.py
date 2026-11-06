@@ -190,3 +190,16 @@ def test_las_plantillas_de_lavaan_evitan_las_trampas_del_objeto_s4(name):
                   "lavInspect(ajuste, 'boot')", "argumento tiene longitud cero",
                   "número diferente de filas"):
         assert pieza in prompt, (name, pieza)
+
+
+def test_la_mediacion_trae_una_receta_de_lavaan_comprobada():
+    """Comprobada contra el intérprete real: sin receta el modelo inventaba la API."""
+    prompt = app.TEMPLATES["Mediación"]
+    for pieza in ("lavaan::sem(modelo, data = sub, estimator = 'ML', missing = 'fiml'",
+                  "se = 'bootstrap', bootstrap = 5000)",
+                  "boot.ci.type = 'perc'", "boot.ci.type = 'bca.simple'",
+                  "lavaan::standardizedSolution(fit)", "est.std",
+                  "No existen standardizedEstimates", "lavaan::lavTestLRT",
+                  "subset(pe, label %in% c('a', 'b', 'cp', 'ab', 'total'))",
+                  "'[predictor]', '[mediador]', '[respuesta]'"):
+        assert pieza in prompt, pieza
