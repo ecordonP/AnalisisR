@@ -178,3 +178,15 @@ def test_plantilla_de_afc_se_rellena_con_las_latentes_definidas(tmp_path, monkey
     finally:
         window.close()
         qt.processEvents()
+
+
+@pytest.mark.parametrize("name", ["Análisis factorial confirmatorio", "Consistencia interna",
+                                  "Invarianza de medida", "Mediación"])
+def test_las_plantillas_de_lavaan_evitan_las_trampas_del_objeto_s4(name):
+    """Comprobado en R: sin adjuntar el paquete, nobs() y coef() fallan sobre el ajuste."""
+    prompt = app.TEMPLATES[name]
+    for pieza in ("lavaan::", "no se pudo encontrar la función",
+                  "no 'nobs' method is available", "lavInspect(ajuste, 'ntotal')",
+                  "lavInspect(ajuste, 'boot')", "argumento tiene longitud cero",
+                  "número diferente de filas"):
+        assert pieza in prompt, (name, pieza)

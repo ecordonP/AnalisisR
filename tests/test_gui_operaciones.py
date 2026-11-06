@@ -371,6 +371,7 @@ def test_plantillas_se_muestran_en_orden_alfabetico(window):
     ("Acuerdo entre evaluaciones", "evaluaciones", [0], "al menos 2"),
     ("ANOVA de medidas repetidas", "medidas", [1], "al menos 2"),
     ("Ausentes e imputación múltiple", "variables", [0], "al menos 2"),
+    ("Correlación", "variables", [0], "al menos 2"),
     ("Modelo multinivel", "predictores", [0, 1], "no puede ser también predictora"),
 ])
 def test_nuevas_plantillas_validan_seleccion(window, monkeypatch, name, field, selection, message):

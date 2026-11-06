@@ -358,18 +358,43 @@ TEMPLATES = {
         "no permite atribuirlo causalmente a una intervención."
     ),
     "Correlación": (
-        "Estima la asociación entre [variable_1] y [variable_2] usando pares completos. Comprueba "
-        "escala, variabilidad y n efectivo; no codifiques categorías nominales como cantidades. "
-        "Para variables cuantitativas con relación lineal utiliza Pearson con stats::cor.test y "
-        "evalúa la plausibilidad de normalidad bivariante para su inferencia, sin confundirla con dos "
-        "pruebas marginales de normalidad. Para variables ordinales o asociación monótona justifica "
-        "Spearman; con empates abundantes o n pequeño considera tau-b de Kendall. Informa coeficiente, "
+        "Estima la asociación entre todos los pares de [variables] usando pares completos, es decir "
+        "cada par con los casos válidos en sus dos variables, y declara el n de cada par porque no "
+        "tiene que coincidir. Comprueba escala, variabilidad y n efectivo; no codifiques categorías "
+        "nominales como cantidades. Elige el método par a par según la naturaleza de las dos "
+        "variables y las pruebas de normalidad, y no apliques un único método a toda la matriz. "
+        "Primero clasifica cada variable con la clase declarada en el diccionario y contrasta su "
+        "normalidad con Shapiro–Wilk, informando W y p; para cada par de cuantitativas evalúa además "
+        "la normalidad bivariante con MVN::mvn sobre esas dos columnas usando mvn_test igual a hz y "
+        "a mardia, sin confundirla con dos pruebas marginales. Llama a mvn con el data.frame de las "
+        "dos columnas y mvn_test, y con nada más: en esta versión el argumento se llama mvn_test, no "
+        "mvnTest, y no existen desc, univariateTest ni multivariatePlot, de modo que pasarlos detiene "
+        "la ejecución con el error el argumento no fue usado. Una llamada devuelve una sola prueba, "
+        "así que repítela con mvn_test igual a hz y a mardia; lee el componente "
+        "multivariate_normality, cuyas columnas son Test, Statistic, p.value, Method y MVN, "
+        "respetando esas mayúsculas, y limpia el p.value, que es texto y puede llegar como <0.001, "
+        "con sub('>', '', sub('<', '', trimws(as.character(p.value)))) antes de compararlo con alfa. "
+        "Luego aplica esta regla y declárala "
+        "en la tabla: dos cuantitativas con normalidad bivariante no rechazada y relación lineal, "
+        "Pearson con stats::cor.test; dos cuantitativas con normalidad rechazada, asimetría marcada "
+        "o atípicos influyentes, Spearman, y si además hay empates abundantes o n pequeño, tau-b de "
+        "Kendall; cualquier par con una ordinal, Spearman, o Kendall con pocos niveles y muchos "
+        "empates; una binaria con una cuantitativa, Pearson identificado como correlación "
+        "punto-biserial, declarando qué categoría vale 1; dos binarias, Pearson identificado como "
+        "coeficiente phi; y si una variable es nominal de más de dos categorías, no calcules "
+        "ninguna correlación con ella, dilo y remite a una tabla de contingencia con V de Cramer. "
+        "Presenta la matriz de coeficientes con el método de cada celda y, además, una tabla por "
+        "par con las dos variables, el método elegido, el motivo en una frase que cite el resultado "
+        "de normalidad, coeficiente, "
         "n, IC del 95 %, estadístico de contraste, grados de libertad si existen y p bilateral; "
         "para Pearson usa el IC de Fisher cuando sea aplicable. Si Spearman o Kendall no ofrecen IC "
         "analítico, calcula bootstrap de pares con semilla fija y 2000 réplicas, identificando el método "
         "y las réplicas degeneradas, o declara por qué no es estimable. Examina la sensibilidad a "
         "valores influyentes sin excluirlos automáticamente. No interpretes coeficiente cercano a cero "
-        "como ausencia de toda relación; distingue linealidad y monotonía. Interpreta signo, intensidad, "
+        "como ausencia de toda relación; distingue linealidad y monotonía. Con k variables hay "
+        "k(k-1)/2 pares: informa cuántos contrastes se han realizado y añade el p ajustado por Holm "
+        "con stats::p.adjust junto al p sin ajustar, sin sustituir uno por otro, y no selecciones "
+        "para el relato solo los pares significativos. Interpreta signo, intensidad, "
         "precisión y límites del diseño, sin causalidad ni equivalencia por p no significativo."
     ),
     "Regresión": (
@@ -929,7 +954,11 @@ RELIABILITY_METHOD = (
     "y coefficientalpha::omega sobre un data.frame numérico con nombres de ítems, filas de personas "
     "y columnas de ítems; nunca pases una matriz de correlaciones como si fueran observaciones. "
     "Comprueba requireNamespace('coefficientalpha', quietly=TRUE); si falta, indícalo y solicita su "
-    "instalación manual, sin sustituir el paquete ni instalarlo desde el análisis. Como estimación "
+    "instalación manual, sin sustituir el paquete ni instalarlo desde el análisis. Los datos van en "
+    "el primer argumento, que se llama y: pasa el data.frame en primera posición o como y=datos, "
+    "nunca como x=datos, porque la llamada se detiene con el error el argumento no fue usado. "
+    "La firma de ambas funciones es (y, varphi, se, test, complete, auxiliary, drop, silent). "
+    "Como estimación "
     "convencional fija varphi=0, se=TRUE, test=TRUE y complete=TRUE tras definir los mismos casos "
     "completos para todas las comparaciones. Si se justifica una sensibilidad robusta, declara "
     "la tasa de atenuación de casos varphi elegida y separa sus resultados de los convencionales. "
@@ -995,6 +1024,18 @@ LAVAAN_ROWS = (
     "varianzas de error exigiendo que lhs esté entre los nombres de los indicadores, empareja cada "
     "carga con la varianza del mismo indicador por nombre y no por posición, y comprueba la longitud "
     "de los vectores antes de construir la tabla."
+    " El paquete no está adjunto: escribe el prefijo lavaan:: en todas sus funciones, también en sem, "
+    "cfa, growth y lavaanify, porque sem a secas detiene el bloque con no se pudo encontrar la "
+    "función. Y como el ajuste es un objeto S4 cuyos métodos no se registran sin adjuntar el "
+    "paquete, no le apliques las genéricas de R: nobs falla con no 'nobs' method is available y coef "
+    "con $ operator not defined for this S4 class. Usa lavaan::lavInspect(ajuste, 'ntotal') para el "
+    "n analizado, lavaan::parameterEstimates y lavaan::standardizedSolution para las estimaciones, "
+    "lavaan::fitMeasures para el ajuste y lavaan::lavInspect(ajuste, 'converged') para la "
+    "convergencia. Tampoco leas slots internos como ajuste@boot, que puede venir vacío y deja "
+    "cualquier if con el error argumento tiene longitud cero: la matriz de réplicas válidas es "
+    "lavaan::lavInspect(ajuste, 'boot'), su nrow son las réplicas conservadas y sus atributos "
+    "error.idx y nonadmissible identifican las fallidas; declara las réplicas pedidas y las "
+    "conservadas por separado."
 )
 for name in ("Análisis factorial confirmatorio", "Consistencia interna",
              "Invarianza de medida", "Mediación"):
@@ -1285,8 +1326,13 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
             # El analizador no evalúa el código: este diagnóstico no contiene salida de los datos.
             context.extend(["ASISTENTE:\n" + code,
                             "ERROR DE SINTAXIS (detectado sin ejecutar ni leer datos):\n" + last_syntax_error,
-                            "Corrige la sintaxis y devuelve únicamente un bloque R completo. "
-                            "No se ha ejecutado este código y no hay resultados que interpretar."])
+                            # Reenviar el mismo bloque enorme agota los tres intentos: el error
+                            # siempre aparece en una función anónima larga dentro de otra llamada.
+                            "Corrige la sintaxis y devuelve únicamente un bloque R completo, más "
+                            "corto y simple que el anterior: deja solo lo que falte por calcular, "
+                            "parte las funciones anónimas largas en pasos con nombre y revisa las "
+                            "llaves y las comas alrededor de la línea indicada. No se ha ejecutado "
+                            "este código y no hay resultados que interpretar."])
             continue
         last_syntax_error = None
         syntax_errors = 0
@@ -1828,6 +1874,7 @@ def create_window():
                                   "Ausentes e imputación múltiple": ("variables", 2),
                                   "ANOVA de medidas repetidas": ("medidas", 2),
                                   "Acuerdo entre evaluaciones": ("evaluaciones", 2),
+                                  "Correlación": ("variables", 2),
                                   "Normalidad": ("variables", 2)}.get(name, (None, 0))
                 if field and len(selections[field]) < minimum:
                     ui.QMessageBox.information(dialog, "Completar selección",

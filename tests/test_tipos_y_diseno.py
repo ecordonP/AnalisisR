@@ -191,3 +191,13 @@ def test_un_cambio_con_claves_inesperadas_no_impide_cargar(ventana, datos):
     profile["binarizing"] = [{"recoded": True}]
     view.loaded(profile)
     assert view.profile is profile and view.table.rowCount() == 3
+
+
+def test_la_correlacion_admite_varias_variables_y_elige_el_metodo():
+    """Antes solo aceptaba un par fijo; ahora es una matriz con método por par."""
+    prompt = app.TEMPLATES["Correlación"]
+    assert "[variables]" in prompt
+    assert "[variable_1]" not in prompt and "[variable_2]" not in prompt
+    for pieza in ("todos los pares", "par a par", "Shapiro–Wilk", "MVN::mvn",
+                  "punto-biserial", "phi", "V de Cramer", "k(k-1)/2", "Holm"):
+        assert pieza in prompt, pieza
