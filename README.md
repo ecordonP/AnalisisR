@@ -44,6 +44,9 @@ necesaria y no permite ninguna operación.
   el cuadro de consulta ni se muestra en el chat. Mientras corre aparece **Realizando
   análisis solicitado… Espere por favor** y después el nombre de la plantilla; el endpoint
   recibe el texto íntegro. Lo que escribas a mano se envía y se muestra tal cual.
+- Mientras se ejecuta un análisis, el chat anota el **paso en curso** con sus tiempos
+  (consulta al endpoint, respuesta recibida, ejecución de cada bloque de R, ayuda de R), de
+  modo que una espera larga no parezca un cuelgue. El registro conserva el detalle.
 - 28 plantillas de consulta que detallan estimandos, supuestos, contrastes,
   diagnósticos, tamaños de efecto e interpretación, y que se rellenan con tus variables
   reales desde un formulario.

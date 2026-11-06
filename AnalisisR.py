@@ -1165,11 +1165,13 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
             system += ("\nFASE FINAL: se agotó el presupuesto de ejecución. Responde solo con tablas "
                        "e interpretación de las salidas recibidas, sin bloques R ni consultas AYUDA. "
                        "Indica qué se calculó, qué falló y qué no se pudo estimar; no inventes resultados.")
-        engine.log(f"consulta {attempt} al endpoint ({sum(len(c) for c in context)} caracteres de contexto)")
+        engine.log(f"PASO: {'Redactando la interpretación final' if final_only else 'Consultando al endpoint'}"
+                   + (f" (consulta {attempt})" if attempt > 1 else "")
+                   + f"; {sum(len(c) for c in context)} caracteres de contexto")
         inicio = _time.perf_counter()
         response = engine.strip_think(backend.chat(system, "\n\n".join(context)))
-        engine.log(f"respuesta del endpoint en {_time.perf_counter() - inicio:.1f} s "
-                   f"({len(response)} caracteres)")
+        engine.log(f"PASO: Respuesta recibida en {_time.perf_counter() - inicio:.1f} s "
+                   f"({len(response)} caracteres); analizando lo que pide")
         if backend.last_truncated:
             return finish(response + "\n\nRespuesta truncada; aumenta Máx. tokens.")
         topics = re.findall(r"^\s*AYUDA:\s*(.+?)\s*$", response, re.M)
@@ -1182,6 +1184,7 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
             if help_rounds >= 3:
                 return incomplete("Se alcanzó el límite de consultas de ayuda de R.")
             help_rounds += 1
+            engine.log("PASO: Consultando la ayuda de R sobre " + ", ".join(topics)[:120])
             help_text = engine.chat_r_help(rs, topics, temp_dir=folder)
             context.append("AYUDA R:\n" + (help_text or "Ayuda no disponible."))
             continue
@@ -1195,11 +1198,13 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
         r_attempts += 1
         script = folder / f"analisis_{attempt}.R"
         script.write_text(engine.chat_r_script(code, profile), encoding="utf-8")
-        engine.log(f"ejecutando el bloque R {r_attempts}")
+        engine.log(f"PASO: Ejecutando el bloque {r_attempts} de código R")
         inicio = _time.perf_counter()
         try:
             ok, output = engine.chat_run_r(code, profile, rs, timeout=request.get("timeout", 300), temp_dir=folder)
-            engine.log(f"R terminó en {_time.perf_counter() - inicio:.1f} s")
+            engine.log(f"PASO: R terminó en {_time.perf_counter() - inicio:.1f} s; "
+                       + ("enviando sus resultados para interpretarlos" if ok
+                          else "devolviendo el error para que lo corrija"))
         except engine.RSyntaxError as exc:
             syntax_errors += 1
             last_syntax_error = str(exc)
@@ -2085,6 +2090,13 @@ def create_window():
             except ValueError as exc:
                 ui.QMessageBox.warning(self, "Datos pendientes", str(exc))
 
+        def progress(self, line):
+            """Todo va al registro; los pasos marcados se anuncian además en el chat."""
+            self.log.appendPlainText(line)
+            marca = "PASO: "
+            if marca in line:
+                ui.render_step(self.chat, line.split(marca, 1)[1].strip())
+
         def answered(self, question, result, show_code=False, display=None):
             answer = result["answer"]
             code_displayed = False
@@ -2156,7 +2168,7 @@ def create_window():
                 request = dict(request, action=action)
                 write_json(folder / "request.json", request)
                 self.proc = ui.Proc(self)
-                self.proc.line.connect(self.log.appendPlainText)
+                self.proc.line.connect(self.progress)
                 self.proc.failed.connect(lambda message: self.finished(folder, -1, callback, request, message))
                 self.proc.done.connect(lambda code: self.finished(folder, code, callback, request))
                 for page in self.locked_pages:

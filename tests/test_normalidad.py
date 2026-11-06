@@ -304,3 +304,39 @@ def test_el_gl_de_mardia_es_obligatorio_y_las_demas_filas_declaran_su_referencia
     assert "k(k+1)(k+2)/6" in prompt
     for referencia in ("normal estándar", "aproximación lognormal", "remuestreo"):
         assert referencia in prompt, referencia
+
+
+def test_el_chat_anuncia_cada_paso_mientras_espera(ventana, monkeypatch):
+    """Sin esto la espera parece un cuelgue: el chat solo mostraba el aviso inicial."""
+    view, ui = ventana
+
+    def elegir(dialog):
+        for i in (0, 1):
+            dialog.findChild(ui.QListWidget, "variables").item(i).setSelected(True)
+        dialog.findChild(ui.QListWidget, "pruebas_multivariantes").item(0).setCheckState(ui.Qt.Checked)
+        dialog.findChild(ui.QListWidget, "pruebas_univariantes").item(0).setCheckState(ui.Qt.Checked)
+        dialog.findChild(ui.QDialogButtonBox).accepted.emit()
+        return dialog.result()
+
+    monkeypatch.setattr(ui.QDialog, "exec", elegir)
+    view.templates.setCurrentText("Normalidad")
+    view.use_template()
+    assert view.proc is not None
+
+    view.proc.line.emit("[   0.4s] PASO: Consultando al endpoint; 18432 caracteres de contexto")
+    view.proc.line.emit("[  12.9s] PASO: Ejecutando el bloque 1 de código R")
+    view.proc.line.emit("[  15.1s] algo interno que no es un paso")
+    conversacion = view.chat.toPlainText()
+    assert "Consultando al endpoint" in conversacion
+    assert "Ejecutando el bloque 1 de código R" in conversacion
+    assert "algo interno" not in conversacion, "solo los pasos marcados van al chat"
+    # El registro conserva todas las líneas, pasos incluidos.
+    registro = view.log.toPlainText()
+    assert "algo interno" in registro and "Consultando al endpoint" in registro
+
+    # Al llegar la respuesta, el chat se redibuja y los pasos desaparecen.
+    app.write_json(view.folder / "operacion_001" / "result.json", {"answer": "Tabla final"})
+    view.proc.done.emit(0)
+    final = view.chat.toPlainText()
+    assert "Tabla final" in final
+    assert "Consultando al endpoint" not in final and "Ejecutando el bloque" not in final

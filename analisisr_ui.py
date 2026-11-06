@@ -282,6 +282,13 @@ def _table(cols: list[str]) -> QTableWidget:
     t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
     return t
 
+def render_step(browser: QTextBrowser, texto: str) -> None:
+    """Anota el paso en curso. Se borra al llegar la respuesta, que redibuja el chat."""
+    import html as _html
+
+    browser.append(f"<p style='color:#64748b'><i>· {_html.escape(texto)}</i></p>")
+    browser.moveCursor(QTextCursor.End)
+
 def render_chat(browser: QTextBrowser, quien: str, texto: str) -> None:
     import html as _html
     mio = quien == "Tú"
