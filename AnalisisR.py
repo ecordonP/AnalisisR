@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import csv
 import json
+import time as _time
 import re
 import sys
 import tempfile
@@ -591,12 +592,13 @@ TEMPLATES.update({
         "compara su estadístico con una X² con 2k grados de libertad para k variables. No añadas "
         "una columna de grados de libertad llena de NA: inclúyela únicamente si alguna prueba "
         "pedida la devuelve, comprobando su presencia con names() antes de usarla, y para las demás "
-        "escribe un guion y explica en una nota por qué no procede: la curtosis de Mardia se compara "
-        "con una normal estándar, Henze-Zirkler y Henze-Wagner con una aproximación lognormal, "
-        "Royston usa unos grados de libertad equivalentes que el paquete no devuelve, y la prueba de "
-        "energía obtiene su p por remuestreo. Si informas los grados de libertad de la asimetría de "
-        "Mardia, calcúlalos a partir del número de variables k como k(k+1)(k+2)/6 y declara que son "
-        "derivados y no devueltos por el paquete. Atención al formato: la columna p.value es de tipo texto y puede "
+        "escribe en esa celda un guion seguido de la distribución de referencia, nunca NA ni una "
+        "celda vacía: para la curtosis de Mardia normal estándar, para Henze-Zirkler y Henze-Wagner "
+        "aproximación lognormal, para Royston grados de libertad equivalentes que el paquete no "
+        "devuelve, y para la prueba de energía remuestreo. Para la asimetría de Mardia informa "
+        "siempre sus grados de libertad calculándolos a partir del número de variables k como "
+        "k(k+1)(k+2)/6, marcados como derivados y no devueltos por el paquete, y comprueba que "
+        "coinciden con los que correspondan a las k variables analizadas. Atención al formato: la columna p.value es de tipo texto y puede "
         "llegar como <0.001, de modo que as.numeric() sobre ella devuelve NA con aviso de coerción "
         "y cualquier if que dependa de ese valor se detiene con el error de valor ausente donde "
         "TRUE/FALSE es necesario; limpia antes los símbolos con "
@@ -958,6 +960,11 @@ TEMPLATES = {name: prompt + (
     "silenciosamente. Salvo hipótesis direccional previa, usa contrastes bilaterales, alfa=0,05 e "
     "IC del 95 %. Shapiro–Wilk solo es aplicable con entre 3 y 5000 valores finitos y no constantes; "
     "no tomes una submuestra arbitraria para obtener un p ni interpretes p>0,05 como prueba de normalidad. "
+    "No escribas nunca install.packages() ni library() de un paquete ausente, ni siquiera dentro "
+    "de un if o tras un requireNamespace(): la aplicación rechaza el bloque completo por tocar el "
+    "sistema y no ejecuta nada, y ese rechazo no significa que el paquete falte. Comprueba la "
+    "disponibilidad solo con requireNamespace(nombre, quietly=TRUE) y fíate de la lista de paquetes "
+    "instalados que recibes en el contexto. "
     "Ninguna decisión del código puede depender de un valor que pueda ser NA: compruébalo con "
     "is.na() o envuelve la condición en isTRUE(), porque un if con NA detiene la ejecución; si una "
     "comprobación no es evaluable, informa del motivo y sigue con la opción por omisión declarada. "
@@ -1105,6 +1112,20 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
         context.append("No hay datos cargados. No se puede calcular sobre datos locales.")
     enabled = request.get("run_r", False)
     context.append("Ejecución local de R: " + ("habilitada" if enabled else "deshabilitada"))
+    if enabled and rs:
+        # Sin esta lista el modelo adivina la disponibilidad y aborta análisis que sí podía hacer.
+        # La interfaz la envía si ya la conoce: recalcularla cuesta unos dos segundos por turno.
+        try:
+            diagnostico = {"packages": request["packages"]} if request.get("packages") else engine.diagnose_r()
+            hay = [p["package"] for p in diagnostico.get("packages", []) if p["installed"]]
+            faltan = [p["package"] for p in diagnostico.get("packages", []) if not p["installed"]]
+            if hay or faltan:
+                context.append("PAQUETES R INSTALADOS Y DISPONIBLES: " + (", ".join(hay) or "ninguno")
+                               + ". No instalados: " + (", ".join(faltan) or "ninguno")
+                               + ". Esta lista es la del R que ejecutará tu código: no supongas "
+                                 "que falta un paquete que aparece como disponible.")
+        except Exception as exc:                                   # noqa: BLE001
+            engine.log(f"no se pudo listar los paquetes de R: {exc}")
     for turn in request.get("history", [])[-20:]:
         context.append(f"{turn['role']}: {turn['content']}")
     context.append("USUARIO: " + request["ask"])
@@ -1144,7 +1165,11 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
             system += ("\nFASE FINAL: se agotó el presupuesto de ejecución. Responde solo con tablas "
                        "e interpretación de las salidas recibidas, sin bloques R ni consultas AYUDA. "
                        "Indica qué se calculó, qué falló y qué no se pudo estimar; no inventes resultados.")
+        engine.log(f"consulta {attempt} al endpoint ({sum(len(c) for c in context)} caracteres de contexto)")
+        inicio = _time.perf_counter()
         response = engine.strip_think(backend.chat(system, "\n\n".join(context)))
+        engine.log(f"respuesta del endpoint en {_time.perf_counter() - inicio:.1f} s "
+                   f"({len(response)} caracteres)")
         if backend.last_truncated:
             return finish(response + "\n\nRespuesta truncada; aumenta Máx. tokens.")
         topics = re.findall(r"^\s*AYUDA:\s*(.+?)\s*$", response, re.M)
@@ -1170,8 +1195,11 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
         r_attempts += 1
         script = folder / f"analisis_{attempt}.R"
         script.write_text(engine.chat_r_script(code, profile), encoding="utf-8")
+        engine.log(f"ejecutando el bloque R {r_attempts}")
+        inicio = _time.perf_counter()
         try:
             ok, output = engine.chat_run_r(code, profile, rs, timeout=request.get("timeout", 300), temp_dir=folder)
+            engine.log(f"R terminó en {_time.perf_counter() - inicio:.1f} s")
         except engine.RSyntaxError as exc:
             syntax_errors += 1
             last_syntax_error = str(exc)
@@ -1274,6 +1302,7 @@ def create_window():
             self.closing = False
             self.job = 0
             self.r_ready = False
+            self.r_diagnosis = []
             self.tabs = ui.QTabWidget()
             self.setCentralWidget(self.tabs)
             self.build_environment()
@@ -1862,6 +1891,7 @@ def create_window():
             """Resultado del diagnóstico en la pestaña Entorno R, su único sitio."""
             self.tabs.setCurrentIndex(self.tabs.indexOf(self.environment_page))
             packages = result.get("packages", [])
+            self.r_diagnosis = packages          # se reenvía al chat para no recalcularlo
             absent = [item["package"] for item in packages if not item["installed"]]
             # La guía documenta esta misma lista: la comprobación debe decir si está completa.
             verdict = ("Faltan " + str(len(absent)) + " de " + str(len(packages))
@@ -2045,7 +2075,7 @@ def create_window():
                                          "content": turn.get("context", turn["content"])}
                                         for turn in self.history],
                                run_r=self.run_r.isChecked(), share_output=self.share.isChecked(),
-                               show_code=self.show_code.isChecked())
+                               show_code=self.show_code.isChecked(), packages=self.r_diagnosis)
                 etiqueta = "Análisis solicitado: " + plantilla if plantilla else request["ask"]
                 ui.render_chat(self.chat, "Tú",
                                "Realizando análisis solicitado… Espere por favor."

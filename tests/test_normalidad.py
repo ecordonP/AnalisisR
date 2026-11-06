@@ -219,3 +219,88 @@ def test_una_consulta_escrita_a_mano_si_se_muestra(ventana, monkeypatch):
     assert view.proc is not None
     assert "Describe las variables x e y" in view.chat.toPlainText()
     assert "Realizando análisis solicitado" not in view.chat.toPlainText()
+
+
+def test_el_contexto_declara_los_paquetes_instalados(tmp_path, monkeypatch):
+    """Sin esta lista el modelo adivinaba y abortaba análisis con paquetes sí instalados."""
+    prompts = []
+
+    class Backend:
+        last_truncated = False
+
+        def chat(self, system, user):
+            prompts.append(user)
+            return "Listo, sin código."
+
+    source = tmp_path / "d.csv"
+    source.write_text("x,y\n1,2\n2,3\n3,5\n", encoding="utf-8")
+    profile = app.prepare_data({"data": str(source)}, tmp_path)
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: "Rscript")
+    monkeypatch.setattr(app.engine, "diagnose_r", lambda: {"packages": [
+        {"package": "MVN", "version": "6.3", "installed": True},
+        {"package": "lavaan", "version": "0.7.3", "installed": True},
+        {"package": "metafor", "version": "NO_INSTALADO", "installed": False}]})
+    app.converse({"ask": "Normalidad de x e y", "profile": profile, "run_r": True},
+                 tmp_path, backend=Backend())
+    contexto = prompts[0]
+    assert "PAQUETES R INSTALADOS Y DISPONIBLES: MVN, lavaan" in contexto
+    assert "No instalados: metafor" in contexto
+    assert "no supongas" in contexto
+
+
+def test_un_fallo_al_listar_paquetes_no_rompe_la_consulta(tmp_path, monkeypatch):
+    class Backend:
+        last_truncated = False
+
+        def chat(self, system, user):
+            return "Respuesta sin R."
+
+    def revienta():
+        raise OSError("Rscript no disponible")
+
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: "Rscript")
+    monkeypatch.setattr(app.engine, "diagnose_r", revienta)
+    resultado = app.converse({"ask": "Describe", "profile": None, "run_r": True},
+                             tmp_path, backend=Backend())
+    assert "Respuesta sin R" in resultado["answer"]
+
+
+def test_el_rechazo_de_install_packages_aclara_que_no_prueba_nada():
+    motivo = app.engine.chat_r_guard("if (!requireNamespace('MVN')) install.packages('MVN')")
+    assert "install.packages()" in motivo
+    assert "no dice nada sobre qué paquetes hay instalados" in motivo
+    assert "requireNamespace()" in motivo
+
+
+def test_ninguna_plantilla_permite_instalar_paquetes():
+    for name, prompt in app.TEMPLATES.items():
+        assert "No escribas nunca install.packages()" in prompt, name
+
+
+def test_el_diagnostico_ya_conocido_no_se_recalcula(tmp_path, monkeypatch):
+    """Recalcular los 25 paquetes cuesta unos dos segundos por turno."""
+    llamadas = []
+
+    class Backend:
+        last_truncated = False
+
+        def chat(self, system, user):
+            llamadas.append(user)
+            return "Sin código."
+
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: "Rscript")
+    monkeypatch.setattr(app.engine, "diagnose_r",
+                        lambda: (_ for _ in ()).throw(AssertionError("no debe recalcularse")))
+    app.converse({"ask": "Normalidad", "profile": None, "run_r": True,
+                  "packages": [{"package": "MVN", "version": "6.3", "installed": True}]},
+                 tmp_path, backend=Backend())
+    assert "PAQUETES R INSTALADOS Y DISPONIBLES: MVN" in llamadas[0]
+
+
+def test_el_gl_de_mardia_es_obligatorio_y_las_demas_filas_declaran_su_referencia():
+    prompt = app.TEMPLATES["Normalidad"]
+    assert "nunca NA ni una" in prompt and "celda vacía" in prompt
+    assert "Para la asimetría de Mardia informa siempre sus grados de libertad" in prompt
+    assert "k(k+1)(k+2)/6" in prompt
+    for referencia in ("normal estándar", "aproximación lognormal", "remuestreo"):
+        assert referencia in prompt, referencia

@@ -1600,7 +1600,10 @@ def chat_r_guard(code: str) -> str | None:
     for nombre in CHAT_R_PROHIBIDO:
         if re.search(rf"(?<![\w.]){re.escape(nombre)}\s*\(", sin_comentarios):
             return (f"el código llama a `{nombre}()`, que el chat no ejecuta: toca el "
-                    f"sistema, la red o el estado de la sesión")
+                    f"sistema, la red o el estado de la sesión. No se ha ejecutado nada del "
+                    f"bloque, así que esto no dice nada sobre qué paquetes hay instalados: "
+                    f"quita esa llamada, comprueba la disponibilidad con requireNamespace() y "
+                    f"vuelve a enviar el análisis")
     if re.search(r"(?<![\w.])(write\.csv|write\.table|writeLines|saveRDS|png|pdf|jpeg)\s*\(",
                  sin_comentarios):
         return "el código escribe archivos; el chat sólo calcula e imprime"
