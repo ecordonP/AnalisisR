@@ -147,3 +147,23 @@ def test_sin_elegir_pruebas_no_se_prepara_la_consulta(ventana, monkeypatch):
     view.use_template()
     assert view.question.toPlainText() == ""
     assert avisos and "Pruebas" in avisos[0]
+
+
+def test_el_prompt_no_inventa_grados_de_libertad():
+    """Solo Doornik-Hansen devuelve df en MVN 6.3: el resto no puede salir como NA."""
+    prompt = app.TEMPLATES["Normalidad"]
+    assert "solo Doornik-Hansen devuelve la columna df" in prompt
+    assert "No añadas" in prompt and "llena de NA" in prompt
+    assert "aproximación lognormal" in prompt and "k(k+1)(k+2)/6" in prompt
+
+
+def test_la_conclusion_no_puede_contradecir_al_p():
+    """Un p<0,001 etiquetado como «no rechaza» era el error observado en una ejecución real."""
+    prompt = app.TEMPLATES["Normalidad"]
+    assert "coherente con su p" in prompt
+    assert "jamás" in prompt and "no se rechaza" in prompt
+    assert "no es evaluable" in prompt
+    # No fiarse de los símbolos Unicode de la columna MVN.
+    assert "marcas Unicode" in prompt
+    for otra in ("Análisis factorial confirmatorio", "Invarianza de medida"):
+        assert "no puede presentarse como que no se rechaza" in app.TEMPLATES[otra], otra
