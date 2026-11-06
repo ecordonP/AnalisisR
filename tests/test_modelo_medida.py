@@ -203,3 +203,36 @@ def test_la_mediacion_trae_una_receta_de_lavaan_comprobada():
                   "subset(pe, label %in% c('a', 'b', 'cp', 'ab', 'total'))",
                   "'[predictor]', '[mediador]', '[respuesta]'"):
         assert pieza in prompt, pieza
+
+
+def test_la_mediacion_pide_una_sola_vez_cada_variable(tmp_path, monkeypatch):
+    """La receta repite los campos en el código: el formulario debe mostrar uno de cada."""
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    pytest.importorskip("PySide6")
+    import analisisr_ui as ui
+    import analisisr_session as sessions
+
+    ui.QApplication.instance() or ui.QApplication([])
+    monkeypatch.setattr(app.secrets, "load", lambda: {})
+    monkeypatch.setattr(app.secrets, "config_dir", lambda: tmp_path / "config")
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: "Rscript")
+    monkeypatch.setattr(sessions, "temporary_root", lambda: tmp_path)
+    window = app.create_window()
+    try:
+        source = window.folder / "source.csv"
+        source.write_text("x,m,y\n1,2,3\n2,3,4\n3,5,6\n", encoding="utf-8")
+        window.loaded(app.prepare_data({"data": str(source)}, window.folder))
+        window.applied_request = window.data_request()
+        campos = {}
+
+        def inspeccionar(dialog):
+            for field in ("predictor", "mediador", "respuesta"):
+                campos[field] = len(dialog.findChildren(ui.QComboBox, field))
+            return ui.QDialog.Rejected
+
+        monkeypatch.setattr(ui.QDialog, "exec", inspeccionar)
+        window.templates.setCurrentText("Mediación")
+        window.use_template()
+        assert campos == {"predictor": 1, "mediador": 1, "respuesta": 1}, campos
+    finally:
+        window.close()

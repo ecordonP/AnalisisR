@@ -1796,7 +1796,9 @@ def create_window():
                 return
             name = self.templates.currentText()
             text = TEMPLATES[name]
-            fields = re.findall(r"\[([^\]]+)\]", text)
+            # Un campo repetido en el prompt es un solo campo del formulario: sin esto la
+            # plantilla de mediación pedía cuatro veces cada variable y solo contaba la última.
+            fields = list(dict.fromkeys(re.findall(r"\[([^\]]+)\]", text)))
             columns = [c["column"] for c in self.profile["columns"]]
             # Campos cuyas opciones son pruebas, no columnas: el código entre paréntesis
             # es el valor exacto que espera MVN.
