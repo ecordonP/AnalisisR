@@ -188,6 +188,8 @@ def test_las_plantillas_de_lavaan_evitan_las_trampas_del_objeto_s4(name):
     for pieza in ("lavaan::", "no se pudo encontrar la función",
                   "no 'nobs' method is available", "lavInspect(ajuste, 'ntotal')",
                   "lavInspect(ajuste, 'boot')", "argumento tiene longitud cero",
+                  "what argument unknown", "residual.var no existe",
+                  "subset(pe, op == '~~' & lhs == rhs)",
                   "número diferente de filas"):
         assert pieza in prompt, (name, pieza)
 

@@ -1069,6 +1069,13 @@ LAVAAN_ROWS = (
     "lavaan::lavInspect(ajuste, 'boot'), su nrow son las réplicas conservadas y sus atributos "
     "error.idx y nonadmissible identifican las fallidas; declara las réplicas pedidas y las "
     "conservadas por separado."
+    " El argumento what de lavInspect solo admite unos pocos nombres: usa ntotal, nobs, converged, "
+    "theta, rsquare, est, free y boot, y ninguno más, porque cualquier otro, por razonable que "
+    "parezca, detiene el bloque con what argument unknown; residual.var no existe. Las varianzas "
+    "residuales se leen de parameterEstimates con subset(pe, op == '~~' & lhs == rhs), que además "
+    "trae su error estándar, o de la matriz theta, y la varianza explicada de cada ecuación es "
+    "rsquare. Ante cualquier duda sobre un argumento de lavaan, consulta su ayuda respondiendo "
+    "AYUDA: lavaan::lavInspect en vez de probar un nombre inventado, que cuesta una ejecución."
 )
 for name in ("Análisis factorial confirmatorio", "Consistencia interna",
              "Invarianza de medida", "Mediación"):
