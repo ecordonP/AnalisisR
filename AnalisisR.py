@@ -1017,6 +1017,18 @@ RELIABILITY_METHOD = (
     "reserva la matriz policórica y el modelo categórico para los coeficientes ordinales "
     "complementarios, sin atribuir a coefficientalpha una opción ordered o policórica no documentada. "
     "No atribuyas omega jerárquico a coefficientalpha::omega: usa un modelo específico solo si procede."
+    " Las funciones de psych se escriben siempre con su prefijo, psych::polychoric y "
+    "psych::fa.parallel, porque sin él el bloque se detiene con no se pudo encontrar la función, y "
+    "solo aceptan los argumentos de su firma, comprobada en este intérprete. polychoric admite x, "
+    "y, smooth, global, polycor, ML, std.err, weight, correct, progress, na.rm, delete y max.cat: "
+    "max.observed.levels no existe y el tope de categorías por variable es max.cat, que vale 8 por "
+    "omisión. fa.parallel admite x, n.obs, fm, fa, nfactors, main, n.iter, error.bars, se.bars, "
+    "SMC, ylabel, show.legend, sim, quant, cor, use, plot, correct y sqrt: no hay verbose, la "
+    "matriz policórica se pide con cor igual a poly, y plot igual a FALSE evita abrir un gráfico. "
+    "Tampoco existe un argumento poly para el alfa: el alfa ordinal se obtiene de la matriz "
+    "policórica y se declara como tal, separado del alfa de las puntuaciones observadas. "
+    "Cualquier otro argumento inventado cuesta una ejecución de las seis: si dudas de una firma, "
+    "responde AYUDA: psych::fa.parallel antes de probar."
 )
 for name in ("Fiabilidad", "Consistencia interna"):
     TEMPLATES[name] += RELIABILITY_METHOD
@@ -1076,10 +1088,40 @@ LAVAAN_ROWS = (
     "trae su error estándar, o de la matriz theta, y la varianza explicada de cada ecuación es "
     "rsquare. Ante cualquier duda sobre un argumento de lavaan, consulta su ayuda respondiendo "
     "AYUDA: lavaan::lavInspect en vez de probar un nombre inventado, que cuesta una ejecución."
+    " El número de parámetros libres es lavaan::fitMeasures(ajuste, 'npar'), un número con nombre; "
+    "lavInspect con free devuelve una lista de matrices y pasarla a cat detiene el bloque con el "
+    "argumento no es soportado por 'cat'. Envuelve en as.numeric() o unname() todo lo que imprimas "
+    "con cat, que solo acepta vectores atómicos."
+    " Comprobado también: semTools::compRelSEM con simplify igual a TRUE devuelve un vector sin "
+    "nombres, así que names() sobre él es NULL y la tabla se detiene con los argumentos implican un "
+    "número diferente de filas: 0, 1. Llámalo con simplify igual a FALSE, que devuelve una lista "
+    "con el nombre de cada latente, o escribe tú los nombres de las latentes que declaraste. En "
+    "general, no construyas una columna a partir de names() de un resultado sin comprobar antes "
+    "que no es NULL. Y si el modelo tiene una sola variable latente no hay pares que comparar: "
+    "di que la validez discriminante y el HTMT no son aplicables en vez de construir una tabla "
+    "vacía."
 )
 for name in ("Análisis factorial confirmatorio", "Consistencia interna",
              "Invarianza de medida", "Mediación"):
     TEMPLATES[name] += LAVAAN_ROWS
+MVN_CALL = (
+    " Sobre MVN: una llamada a MVN::mvn devuelve una sola prueba, así que invócala una vez por "
+    "prueba con mvn_test igual a su código, que puede ser mardia, hz, hw, royston, doornik_hansen "
+    "o energy, pasando solo el data.frame y mvn_test. No existen en esta versión desc, "
+    "univariateTest, multivariatePlot ni mvnTest, y pasarlos detiene el bloque con el error el "
+    "argumento no fue usado. Lee el componente multivariate_normality, cuyas columnas son Test, "
+    "Statistic, p.value, Method y MVN con esas mayúsculas, más df solo en Doornik-Hansen. La "
+    "llamada con mardia devuelve dos filas, asimetría y curtosis, y cada una de las demás pruebas "
+    "una sola: no escribas a mano un vector con los nombres de las pruebas, porque en cuanto no "
+    "coincide con las filas devueltas el bloque se detiene con los argumentos implican un número "
+    "diferente de filas. Combina las filas con do.call(rbind, ...) y toma los nombres de la columna "
+    "Test. El p.value es texto y puede llegar como <0.001: límpialo con "
+    "sub('>', '', sub('<', '', trimws(as.character(p.value)))) antes de compararlo con alfa. El "
+    "componente univariate_normality trae Test, Variable, Statistic, p.value y Normality, sin "
+    "Method y sin MVN."
+)
+for name in ("Análisis factorial confirmatorio", "Invarianza de medida"):
+    TEMPLATES[name] += MVN_CALL
 TEMPLATES = {name: prompt + (
     " En todos los cálculos documenta ausentes, n efectivo y exclusiones, sin imputar ni recodificar "
     "silenciosamente. Salvo hipótesis direccional previa, usa contrastes bilaterales, alfa=0,05 e "
@@ -1093,6 +1135,9 @@ TEMPLATES = {name: prompt + (
     "puede quedar sin ejecutar: no escribas que algo queda pendiente, no calculado o para una salida "
     "posterior, porque nadie va a pedirlo después. Si una prueba concreta no es estimable con estos "
     "datos, dilo con su motivo técnico, y calcula todas las demás. "
+    "Antes de redondear, promediar o comparar, comprueba que la columna es numérica: round() o "
+    "mean() sobre texto detienen el bloque con argumento no numérico para una función matemática, "
+    "y varias columnas que R devuelve como p, gl o conclusiones son cadenas. "
     "No crees un objeto por grupo con nombres numerados tipo desc_g1, desc_g2: recorre los niveles "
     "observados con split() o con lapply() sobre levels(factor(variable)) y combina las filas con "
     "do.call(rbind, ...), porque en cuanto hay más niveles de los que escribiste a mano el bloque "
@@ -2435,6 +2480,13 @@ def create_window():
 
 def main() -> int:
     if len(sys.argv) == 3 and sys.argv[1] == "--worker":
+        # El registro va por stdout: sin fijar UTF-8 el ejecutable congelado usa la página
+        # de códigos del sistema y las tildes llegan al panel como signos raros.
+        for flujo in (sys.stdout, sys.stderr):
+            try:
+                flujo.reconfigure(encoding="utf-8", errors="replace")
+            except (AttributeError, OSError, ValueError):
+                pass
         configure_temporaries(Path(sys.argv[2]).parent)
         return worker(Path(sys.argv[2]))
     configure_temporaries()

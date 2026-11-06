@@ -396,3 +396,38 @@ def test_el_prompt_incluye_un_ejemplo_imitable_y_valido():
     # El ejemplo no puede traer corchetes ni comillas dobles: romperían el relleno.
     import re
     assert "[" not in re.sub(r"\[[^\]]+\]", "", prompt) and '"' not in prompt
+
+
+def test_el_registro_del_worker_fuerza_utf8(monkeypatch, tmp_path, capsys):
+    """Congelado, sin fijar UTF-8 el panel mostraba las tildes como signos raros."""
+    import sys
+
+    llamadas = []
+
+    class Flujo:
+        def reconfigure(self, **kw):
+            llamadas.append(kw)
+
+    (tmp_path / "request.json").write_text('{"action": "diagnose"}', encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["AnalisisR.py", "--worker", str(tmp_path / "request.json")])
+    monkeypatch.setattr(sys, "stdout", Flujo())
+    monkeypatch.setattr(sys, "stderr", Flujo())
+    monkeypatch.setattr(app, "configure_temporaries", lambda *a: None)
+    monkeypatch.setattr(app, "worker", lambda ruta: 0)
+    assert app.main() == 0
+    assert llamadas == [{"encoding": "utf-8", "errors": "replace"}] * 2
+
+
+def test_las_firmas_de_psych_estan_declaradas():
+    """Comprobadas contra el intérprete: el modelo inventaba argumentos y gastaba bloques."""
+    for name in ("Fiabilidad", "Consistencia interna"):
+        prompt = app.TEMPLATES[name]
+        for pieza in ("psych::polychoric", "psych::fa.parallel", "max.observed.levels no existe",
+                      "max.cat", "no hay verbose", "cor igual a poly",
+                      "Tampoco existe un argumento poly"):
+            assert pieza in prompt, (name, pieza)
+
+
+def test_ninguna_plantilla_redondea_texto_sin_comprobarlo():
+    for name, prompt in app.TEMPLATES.items():
+        assert "argumento no numérico para una función matemática" in prompt, name

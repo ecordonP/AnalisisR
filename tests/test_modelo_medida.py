@@ -238,3 +238,24 @@ def test_la_mediacion_pide_una_sola_vez_cada_variable(tmp_path, monkeypatch):
         assert campos == {"predictor": 1, "mediador": 1, "respuesta": 1}, campos
     finally:
         window.close()
+
+
+@pytest.mark.parametrize("name", ["Análisis factorial confirmatorio", "Invarianza de medida"])
+def test_los_prompts_de_medida_declaran_la_llamada_de_mvn(name):
+    """El modelo escribía tres nombres de prueba a mano y rompía el data.frame."""
+    prompt = app.TEMPLATES[name]
+    for pieza in ("una sola prueba", "no escribas a mano un vector con los nombres",
+                  "número diferente de filas", "do.call(rbind, ...)",
+                  "Test, Statistic, p.value, Method y MVN", "univariateTest"):
+        assert pieza in prompt, (name, pieza)
+
+
+@pytest.mark.parametrize("name", ["Análisis factorial confirmatorio", "Consistencia interna",
+                                  "Invarianza de medida", "Mediación"])
+def test_los_prompts_de_lavaan_cuentan_los_parametros_con_npar(name):
+    prompt = app.TEMPLATES[name]
+    assert "lavaan::fitMeasures(ajuste, 'npar')" in prompt
+    assert "no es soportado por 'cat'" in prompt
+    # compRelSEM con simplify=TRUE devuelve un vector sin nombres: comprobado en R.
+    assert "simplify igual a FALSE" in prompt and "names() sobre él es NULL" in prompt
+    assert "una sola variable latente no hay pares" in prompt
