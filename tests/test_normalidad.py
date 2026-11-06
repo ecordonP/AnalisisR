@@ -340,3 +340,42 @@ def test_el_chat_anuncia_cada_paso_mientras_espera(ventana, monkeypatch):
     final = view.chat.toPlainText()
     assert "Tabla final" in final
     assert "Consultando al endpoint" not in final and "Ejecutando el bloque" not in final
+
+
+def test_el_bloque_de_r_acepta_dat_y_datos():
+    """Los prompts piden dat; el alias cubre el nombre que el modelo tiende a inventar."""
+    script = app.engine.chat_r_script("cat(nrow(dat), nrow(datos))", {"file": "d.csv"})
+    assert "dat <- utils::read.csv" in script
+    assert "datos <- dat" in script
+    # El alias se define antes del código del chat.
+    assert script.index("datos <- dat") < script.index("# --- código del chat ---")
+
+
+def test_ninguna_plantilla_pide_un_data_frame_inexistente():
+    import re
+
+    for name, prompt in app.TEMPLATES.items():
+        assert not re.findall(r"[a-zA-Z_.]*\(datos[,)]|data=datos|datos_del_grupo", prompt), name
+        assert "ya están cargados en el data.frame dat" in prompt, name
+
+
+def test_el_prompt_prohibe_los_argumentos_que_rompen_mvn():
+    """Una ejecución real murió con power_family=NULL: son cadenas con valor por omisión."""
+    prompt = app.TEMPLATES["Normalidad"]
+    assert "argumentos imprescindibles" in prompt
+    assert "NULL o FALSE detiene la ejecución" in prompt and "match.arg" in prompt
+    for valido in ("bcPower", "bcnPower", "yjPower", "quan", "adj"):
+        assert valido in prompt, valido
+    assert "mvn_test=NULL" in prompt and "univariate_test=NULL" in prompt
+
+
+def test_el_prompt_fija_los_nombres_de_columna_con_sus_mayusculas():
+    prompt = app.TEMPLATES["Normalidad"]
+    assert "Test, Statistic, p.value, Method y MVN" in prompt
+    assert "minúscula devuelve NULL" in prompt
+
+
+def test_ninguna_plantilla_reimplementa_lo_que_r_ya_trae():
+    for name, prompt in app.TEMPLATES.items():
+        assert "usa p.adjust" in prompt, name
+        assert "llega truncado" in prompt, name

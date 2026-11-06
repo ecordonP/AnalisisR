@@ -103,14 +103,14 @@ def test_los_prompts_de_medida_exigen_normalidad_multivariante_y_regla_de_estima
 def test_la_invarianza_evalua_la_normalidad_dentro_de_cada_grupo():
     prompt = app.TEMPLATES["Invarianza de medida"]
     assert "dentro de cada grupo por separado" in prompt
-    assert "MVN::mvn(datos_del_grupo, mvn_test='mardia')" in prompt
+    assert "MVN::mvn(subset(dat, grupo == nivel, select = columnas), mvn_test='mardia')" in prompt
     # Un estimador único para toda la secuencia: un grupo no normal basta para fijar MLR.
     assert "Si algún grupo la rechaza" in prompt and "no mezcles estimadores" in prompt
 
 
 def test_el_prompt_de_afc_exige_normalidad_multivariante_y_regla_de_estimador():
     prompt = app.TEMPLATES["Análisis factorial confirmatorio"]
-    for pieza in ("MVN::mvn(datos, mvn_test='mardia')", "MVN::mvn(datos, mvn_test='hz')",
+    for pieza in ("mvn_test='mardia'", "mvn_test='hz'",
                   "multivariate_normality", "univariate_normality", "descriptives",
                   "mvn_test y no", "estimator='WLSMV'", "ordered=", "estimator='MLR'",
                   "requireNamespace('MVN', quietly=TRUE)"):

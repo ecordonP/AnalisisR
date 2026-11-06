@@ -1704,6 +1704,8 @@ def chat_r_script(code: str, prof: dict, keep: list[str] | None = None) -> str:
     return (f"dat <- utils::read.csv({json.dumps(str(datos))}, check.names = FALSE,\n"
             f"                      encoding = \"UTF-8\", na.strings = c(\"\", \"NA\"))\n"
             + columnas
+            # Alias defensivo: en un prompt en español el modelo tiende a escribir `datos`.
+            + "datos <- dat\n"
             + "options(warn = 1, width = 120)\n"
             + CHAT_TABLE_R
             + "# --- código del chat ---\n" + code.strip() + "\n")
