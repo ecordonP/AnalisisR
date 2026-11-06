@@ -1,4 +1,5 @@
 """Plantilla de normalidad: el usuario elige las pruebas de MVN y el prompt usa sus códigos."""
+import json
 import os
 
 import pytest
@@ -106,8 +107,10 @@ def test_la_consulta_recoge_solo_las_pruebas_seleccionadas(ventana, monkeypatch)
 
     monkeypatch.setattr(ui.QDialog, "exec", elegir)
     view.use_template()
-    consulta = view.question.toPlainText()
+    assert view.proc is not None
+    consulta = json.loads((view.folder / "operacion_001" / "request.json").read_text(encoding="utf-8"))["ask"]
     assert not avisos
+    assert view.question.toPlainText() == "", "el prompt no pasa por el cuadro de consulta"
     assert "Pruebas multivariantes solicitadas: Mardia (mardia), Royston (royston)." in consulta
     assert "Pruebas univariantes solicitadas: Anderson-Darling (AD)." in consulta
     assert "de x, y con el paquete MVN" in consulta
@@ -135,7 +138,7 @@ def test_una_sola_variable_no_permite_pruebas_multivariantes(ventana, monkeypatc
 
     monkeypatch.setattr(ui.QDialog, "exec", elegir)
     view.use_template()
-    assert view.question.toPlainText() == ""
+    assert view.proc is None and view.question.toPlainText() == ""
     assert avisos and "al menos 2" in avisos[0]
 
 
@@ -152,7 +155,7 @@ def test_sin_elegir_pruebas_no_se_prepara_la_consulta(ventana, monkeypatch):
 
     monkeypatch.setattr(ui.QDialog, "exec", elegir)
     view.use_template()
-    assert view.question.toPlainText() == ""
+    assert view.proc is None and view.question.toPlainText() == ""
     assert avisos and "Pruebas" in avisos[0]
 
 
@@ -191,13 +194,11 @@ def test_al_enviar_una_plantilla_no_se_muestra_el_prompt(ventana, monkeypatch):
     monkeypatch.setattr(ui.QDialog, "exec", elegir)
     view.templates.setCurrentText("Normalidad")
     view.use_template()
-    prompt = view.question.toPlainText()
-    assert "MVN" in prompt
-
-    view.send_chat()
-    assert view.proc is not None
-    enviado = app.json.loads((view.folder / "operacion_001" / "request.json").read_text(encoding="utf-8"))
-    assert enviado["ask"] == prompt.strip(), "el endpoint debe recibir el prompt íntegro"
+    assert view.proc is not None, "la plantilla se envía directamente"
+    assert view.question.toPlainText() == "", "el prompt no se escribe en el cuadro de consulta"
+    peticion = json.loads((view.folder / "operacion_001" / "request.json").read_text(encoding="utf-8"))
+    prompt = peticion["ask"]
+    assert "MVN" in prompt and "mvn_test" in prompt, "el endpoint recibe el prompt íntegro"
     conversacion = view.chat.toPlainText()
     assert "Realizando análisis solicitado" in conversacion and "Espere por favor" in conversacion
     assert "MVN" not in conversacion and "mvn_test" not in conversacion
@@ -207,7 +208,7 @@ def test_al_enviar_una_plantilla_no_se_muestra_el_prompt(ventana, monkeypatch):
     view.proc.done.emit(0)
     turno = view.history[0]
     assert turno["content"] == "Análisis solicitado: Normalidad"
-    assert turno["context"] == prompt.strip()
+    assert turno["context"] == prompt
     assert "MVN" not in view.chat.toPlainText()
 
 

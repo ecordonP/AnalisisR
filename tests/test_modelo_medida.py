@@ -1,4 +1,5 @@
 """Definición de variables latentes y consulta de AFC con validez discriminante."""
+import json
 import os
 import re
 
@@ -154,13 +155,17 @@ def test_plantilla_de_afc_se_rellena_con_las_latentes_definidas(tmp_path, monkey
         monkeypatch.setattr(ui.QDialog, "exec", definir)
         window.templates.setCurrentText("Análisis factorial confirmatorio")
         window.use_template()
-        consulta = window.question.toPlainText()
+        assert window.proc is not None
+        carpeta = window.folder / f"operacion_{window.job:03d}"
+        consulta = json.loads((carpeta / "request.json").read_text(encoding="utf-8"))["ask"]
         assert not avisos
+        assert window.question.toPlainText() == ""
+        app.write_json(carpeta / "result.json", {"answer": "Resultado"})
+        window.proc.done.emit(0)
         assert "Calidad medida por a1, a2 y a3; Lealtad medida por b1 y b2" in consulta
         assert "[" not in consulta and "]" not in consulta
 
-        # Sin definir ninguna latente la consulta no se prepara.
-        window.question.clear()
+        # Sin definir ninguna latente no se envía nada.
 
         def sin_definir(dialog):
             dialog.findChild(ui.QDialogButtonBox).accepted.emit()
@@ -168,7 +173,7 @@ def test_plantilla_de_afc_se_rellena_con_las_latentes_definidas(tmp_path, monkey
 
         monkeypatch.setattr(ui.QDialog, "exec", sin_definir)
         window.use_template()
-        assert window.question.toPlainText() == ""
+        assert window.proc is None
         assert "al menos una variable latente" in avisos[-1]
     finally:
         window.close()

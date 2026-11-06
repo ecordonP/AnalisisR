@@ -1274,7 +1274,6 @@ def create_window():
             self.closing = False
             self.job = 0
             self.r_ready = False
-            self.template_query = None
             self.tabs = ui.QTabWidget()
             self.setCentralWidget(self.tabs)
             self.build_environment()
@@ -1602,10 +1601,6 @@ def create_window():
             if current != self.applied_request:
                 ui.QMessageBox.information(self, "Usar plantilla", "Aplica el tratamiento y la selección de variables antes de usar una plantilla.")
                 return
-            if self.question.toPlainText().strip() and ui.QMessageBox.question(
-                    self, "Usar plantilla", "¿Sustituir la consulta que estás escribiendo?",
-                    ui.QMessageBox.Yes | ui.QMessageBox.No, ui.QMessageBox.No) != ui.QMessageBox.Yes:
-                return
             name = self.templates.currentText()
             text = TEMPLATES[name]
             fields = re.findall(r"\[([^\]]+)\]", text)
@@ -1666,7 +1661,7 @@ def create_window():
                 widgets[field] = widget
                 form.addRow(labels[field], widget)
             buttons = ui.QDialogButtonBox(ui.QDialogButtonBox.Ok | ui.QDialogButtonBox.Cancel)
-            buttons.button(ui.QDialogButtonBox.Ok).setText("Preparar consulta")
+            buttons.button(ui.QDialogButtonBox.Ok).setText("Ejecutar análisis")
             selections = {}
 
             def accept():
@@ -1741,10 +1736,8 @@ def create_window():
                 text = re.sub(r"\[([^\]]+)\]",
                               lambda m: (", ".join(selections[m[1]]) or "no especificada")
                               if m[1] in selections else m[0], text)
-                self.question.setPlainText(text)
-                # El prompt de la plantilla no se muestra en el chat: solo su nombre.
-                self.template_query = (name, text.strip())
-                self.question.setFocus()
+                # El prompt no pasa por el cuadro de consulta: se envía directamente.
+                self.send_chat(text.strip(), name)
 
         def save_session(self):
             if self.proc:
@@ -2031,28 +2024,28 @@ def create_window():
                         self.table.item(row, index).setText(str(column.get(key, "")))
             self.statusBar().showMessage(f"Tratamiento aplicado: {profile['n_cols']} variables seleccionadas.")
 
-        def send_chat(self):
-            if self.proc or not self.question.toPlainText().strip():
+        def send_chat(self, ask=None, plantilla=None):
+            # clicked(bool) conecta aquí: solo una cadena cuenta como consulta.
+            ask = ask.strip() if isinstance(ask, str) else self.question.toPlainText().strip()
+            if self.proc or not ask:
                 return
             try:
                 fields = {field for text in TEMPLATES.values() for field in re.findall(r"\[([^\]]+)\]", text)}
                 columns = {c["column"] for c in self.profile["columns"]} if self.profile else set()
-                pending = [field for field in re.findall(r"(?<![\w.])\[([^\[\]\n]+)\]", self.question.toPlainText())
+                pending = [field for field in re.findall(r"(?<![\w.])\[([^\[\]\n]+)\]", ask)
                            if field in fields and "[" + field + "]" not in columns]
                 if pending:
                     raise ValueError("La consulta conserva campos de una plantilla sin completar: " + ", ".join(pending)
                                      + ". Usa una plantilla para elegir las variables o sustituye esos campos por sus nombres.")
                 if self.profile and self.data_request() != self.applied_request:
                     raise ValueError("Aplica el tratamiento y la selección antes de enviar la consulta.")
-                request = dict(self.endpoint(), ask=self.question.toPlainText().strip(),
+                request = dict(self.endpoint(), ask=ask,
                                profile=self.profile,
                                history=[{"role": turn["role"],
                                          "content": turn.get("context", turn["content"])}
                                         for turn in self.history],
                                run_r=self.run_r.isChecked(), share_output=self.share.isChecked(),
                                show_code=self.show_code.isChecked())
-                plantilla = (self.template_query[0] if self.template_query
-                             and self.template_query[1] == request["ask"] else None)
                 etiqueta = "Análisis solicitado: " + plantilla if plantilla else request["ask"]
                 ui.render_chat(self.chat, "Tú",
                                "Realizando análisis solicitado… Espere por favor."

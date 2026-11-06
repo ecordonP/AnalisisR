@@ -1,4 +1,5 @@
 """Navegación estable y resultados de conexión en la pestaña de endpoints."""
+import json
 import os
 from pathlib import Path
 
@@ -8,6 +9,18 @@ import AnalisisR as app
 
 # Ruta real de Rscript antes de cualquier parche: la ventana se prueba con y sin R.
 RSCRIPT = app.engine.find_rscript()
+
+def enviado(window):
+    """Consulta que ha recibido el endpoint en la última operación."""
+    carpeta = window.folder / f"operacion_{window.job:03d}"
+    return json.loads((carpeta / "request.json").read_text(encoding="utf-8"))["ask"]
+
+
+def cerrar(window, answer="Resultado"):
+    """Cierra la operación en curso para poder lanzar la siguiente."""
+    app.write_json(window.folder / f"operacion_{window.job:03d}" / "result.json", {"answer": answer})
+    window.proc.done.emit(0)
+
 
 
 @pytest.fixture
@@ -273,7 +286,7 @@ def test_exportacion_word_incluye_codigo_aunque_no_se_mueste_en_chat(window, mon
     assert "tabla(dat)" in [p.text for p in report.paragraphs]
 
 
-def test_plantillas_rellenan_nombres_reales_sin_corchetes_ni_envio(window, monkeypatch):
+def test_plantillas_se_envian_con_nombres_reales_y_sin_mostrar_el_prompt(window, monkeypatch):
     import analisisr_ui as ui
 
     avisos = []
@@ -316,17 +329,21 @@ def test_plantillas_rellenan_nombres_reales_sin_corchetes_ni_envio(window, monke
 
     monkeypatch.setattr(ui.QDialog, "exec", choose)
     for name in app.TEMPLATES:
-        window.question.clear()
         window.templates.setCurrentText(name)
         window.use_template()
-        prompt = window.question.toPlainText()
         assert not avisos, (name, avisos)
+        assert window.proc is not None, name
+        prompt = enviado(window)
         assert prompt and "[" not in prompt and "]" not in prompt, name
         assert "edad" in prompt and '"' not in prompt
         if name in ("Fiabilidad", "Consistencia interna"):
             assert "coefficientalpha::alpha" in prompt and "coefficientalpha::omega" in prompt
             assert "psych::alpha" not in prompt and "psych::omega" not in prompt
-        assert window.proc is None
+        # El prompt no pasa por el cuadro de consulta ni se muestra en el chat.
+        assert window.question.toPlainText() == "", name
+        assert "Realizando análisis solicitado" in window.chat.toPlainText()
+        cerrar(window)
+        assert window.history[-2]["content"] == "Análisis solicitado: " + name
 
 
 def test_plantillas_se_muestran_en_orden_alfabetico(window):
@@ -429,10 +446,11 @@ def test_recuentos_exposicion_opcional_y_distinta(window, monkeypatch, exposure)
     monkeypatch.setattr(ui.QDialog, "exec", choose)
     window.templates.setCurrentText("Regresión para recuentos")
     window.use_template()
-    prompt = window.question.toPlainText()
     if exposure in (1, 2):
-        assert not prompt and "exposición debe ser distinta" in warnings[0]
-    else:
+        assert window.proc is None and "exposición debe ser distinta" in warnings[0]
+        return
+    prompt = enviado(window)
+    if True:
         assert not warnings and "[" not in prompt
         assert "Exposición seleccionada: " + ("tiempo" if exposure else "no especificada") + "." in prompt
 

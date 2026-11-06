@@ -236,7 +236,7 @@ especializadas, trabaja con el script y los datos en una sesión externa de R.</
 <tr><td>Abrir sesión</td><td>Archivo → Abrir sesión, o <kbd>Ctrl</kbd> + <kbd>O</kbd>. Se crea una nueva copia de trabajo.</td><td>Restaura el análisis y los cambios pendientes. Mantiene el endpoint actual y las preferencias actuales de ejecutar R y enviar su salida.</td></tr>
 <tr><td>Exportar a Word</td><td>Botón Exportar a Word en Chat y R, menú Archivo → Exportar informe a Word, o <kbd>Ctrl</kbd> + <kbd>Mayús</kbd> + <kbd>E</kbd>.</td><td>Guarda la conversación en un documento con preguntas, interpretación, tablas editables y código R disponible, incluso si no se mostraba en el chat.</td></tr>
 <tr><td>Diagnóstico de R</td><td>Pestaña Entorno R → Comprobar R y paquetes, o Ayuda → Diagnóstico de R y paquetes.</td><td>Ruta de Rscript, versión de R, bibliotecas y estado de los paquetes recomendados. No instala paquetes ni consulta servicios externos.</td></tr>
-<tr><td>Plantillas de consultas</td><td>Selecciona una plantilla y pulsa Usar plantilla. Elige las variables reales en el formulario y pulsa Preparar consulta.</td><td>Inserta nombres sin comillas, separados por comas. No deja campos entre corchetes ni envía la consulta automáticamente.</td></tr>
+<tr><td>Plantillas de consultas</td><td>Selecciona una plantilla y pulsa Usar plantilla. Elige las variables reales en el formulario y pulsa Ejecutar análisis.</td><td>Usa los nombres de tus variables sin comillas y sin dejar campos pendientes. El análisis se envía al aceptar el formulario, sin pasar por el cuadro de consulta.</td></tr>
 <tr><td>Abrir reciente</td><td>En Datos, junto a Importar. Selecciona una ruta de la lista.</td><td>Conserva entre sesiones los últimos cinco archivos de datos importados correctamente, sin duplicados. Si un archivo se ha movido, vuelve a importarlo desde su ubicación actual.</td></tr>
 </tbody></table>
 <p>Las sesiones guardadas pueden contener datos sensibles. El límite es de 1 GiB
@@ -247,11 +247,13 @@ interpretar magnitud, precisión y limitaciones. Piden IC del 95 %, tratamiento
 explícito de ausentes y tablas tipo Word. Si no compartes la salida con la IA,
 se solicita que el código R construya un resumen interpretativo local a partir
 de los cálculos. Puedes editar la consulta antes de enviarla.</p>
-<p>Al enviar una consulta preparada con una plantilla, el chat no muestra su texto
-completo: aparece <b>Realizando análisis solicitado… Espere por favor</b> mientras se
-ejecuta y, una vez recibida la respuesta, el turno queda etiquetado con el nombre de la
-plantilla. El endpoint recibe la consulta íntegra, y el informe de Word recoge esa misma
-etiqueta. Si editas el texto antes de enviarlo, se muestra tal como lo hayas escrito.</p>
+<p>Al pulsar <b>Ejecutar análisis</b> en el formulario de una plantilla, la consulta se
+envía directamente: su texto no se escribe en el cuadro de consulta ni se muestra en el
+chat. Mientras se ejecuta aparece <b>Realizando análisis solicitado… Espere por favor</b> y,
+al recibir la respuesta, el turno queda etiquetado con el nombre de la plantilla. El
+endpoint recibe la consulta íntegra, y el informe de Word recoge esa misma etiqueta. Lo que
+tú escribas en el cuadro de consulta se envía y se muestra tal cual, y no se pierde al
+ejecutar una plantilla.</p>
 <ul>
 <li><b>Acuerdo entre evaluaciones:</b> acuerdo entre evaluadores, instrumentos u ocasiones: coeficiente de correlación intraclase con <a href="https://search.r-project.org/CRAN/refmans/psych/html/ICC.html">psych::ICC</a> eligiendo la forma según el diseño, error típico de medida y mínima diferencia detectable, límites de acuerdo con dos medidas, y kappa simple o ponderado para categorías, advirtiendo de su dependencia de las distribuciones marginales.</li>
 <li><b>Análisis clúster:</b> escalado y distancia según las variables, Ward/k-means o Gower/PAM, elección del número de grupos con silueta y gap cuando proceda, estabilidad y perfiles.</li>
