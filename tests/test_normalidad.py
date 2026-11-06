@@ -379,3 +379,15 @@ def test_ninguna_plantilla_reimplementa_lo_que_r_ya_trae():
     for name, prompt in app.TEMPLATES.items():
         assert "usa p.adjust" in prompt, name
         assert "llega truncado" in prompt, name
+
+
+def test_el_prompt_incluye_un_ejemplo_imitable_y_valido():
+    """La prosa se ignoraba; un esqueleto verificado es mucho más difícil de desviar."""
+    prompt = app.TEMPLATES["Normalidad"]
+    for pieza in ("subset(dat, select = vars)", "MVN::mvn(dsel, mvn_test = 'mardia')",
+                  "$multivariate_normality", "as.character(r$Test)", "r$Statistic",
+                  "do.call(rbind, ...)", "tabla()"):
+        assert pieza in prompt, pieza
+    # El ejemplo no puede traer corchetes ni comillas dobles: romperían el relleno.
+    import re
+    assert "[" not in re.sub(r"\[[^\]]+\]", "", prompt) and '"' not in prompt
