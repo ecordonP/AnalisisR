@@ -591,17 +591,27 @@ TEMPLATES.update({
         "alguna vez los necesitas, power_family admite none, bcPower, bcnPower o yjPower, y "
         "multivariate_outlier_method admite none, quan o adj. Tampoco pases mvn_test=NULL ni "
         "univariate_test=NULL: ambos esperan siempre uno de sus códigos. Respeta las mayúsculas de "
-        "las columnas devueltas, que son Test, Statistic, p.value, Method y MVN, más df solo en "
-        "Doornik-Hansen: escribir componente$statistic en minúscula devuelve NULL y deja la tabla "
-        "vacía sin avisar. Esta es la forma correcta, comprobada; imítala y no añadas argumentos: "
+        "las columnas devueltas y no mezcles las de una familia con las de la otra: "
+        "multivariate_normality devuelve Test, Statistic, p.value, Method y MVN, más df solo en "
+        "Doornik-Hansen, mientras que univariate_normality devuelve Test, Variable, Statistic, "
+        "p.value y Normality, sin Method y sin MVN. Pedir r$Method o r$MVN al componente "
+        "univariante devuelve NULL y detiene la ejecución con el error los argumentos implican un "
+        "número diferente de filas; la conclusión univariante se lee de Normality con "
+        "grepl('Not normal', ...). Escribir componente$statistic en minúscula devuelve NULL y deja "
+        "la tabla vacía sin avisar. Esta es la forma correcta, comprobada; imítala y no añadas argumentos: "
         "vars <- c(nombres de las variables pedidas); "
         "dsel <- subset(dat, select = vars); "
         "limpia_p <- function(p) suppressWarnings(as.numeric(sub('>', '', sub('<', '', trimws(as.character(p)))))); "
         "r <- MVN::mvn(dsel, mvn_test = 'mardia')$multivariate_normality; "
         "fila <- data.frame(Prueba = as.character(r$Test), Estadistico = r$Statistic, "
         "p = r$p.value, Conclusion = ifelse(limpia_p(r$p.value) < 0.05, se rechaza, no se rechaza)). "
-        "Repite esa llamada una vez por prueba pedida cambiando mvn_test, haz lo mismo con "
-        "univariate_test para las univariantes, combina las filas con do.call(rbind, ...) y "
+        "Repite esa llamada una vez por prueba pedida cambiando mvn_test. Para las univariantes la "
+        "forma correcta es la siguiente, con sus columnas propias y sin Method ni MVN: "
+        "u <- MVN::mvn(dsel, univariate_test = 'SW')$univariate_normality; "
+        "filas <- data.frame(Prueba = as.character(u$Test), Variable = as.character(u$Variable), "
+        "Estadistico = u$Statistic, p = u$p.value, "
+        "Conclusion = ifelse(limpia_p(u$p.value) < 0.05, se rechaza, no se rechaza)). "
+        "Repítela una vez por prueba univariante pedida, combina las filas con do.call(rbind, ...) y "
         "preséntalas con tabla(). Informa n analizado, ausentes por variable y qué "
         "casos se excluyen, porque el análisis usa casos completos en todas las variables. "
         "Presenta dos tablas, una por familia, con prueba, estadístico, p, método declarado por el "
@@ -650,7 +660,9 @@ TEMPLATES.update({
         "demostración de normalidad ni un rechazo como prueba de que el análisis posterior sea "
         "inválido. Con varias variables, recuerda que los p univariantes se acumulan: señala "
         "cuántas pruebas se han realizado y, si procede, aplica un ajuste declarado tipo Holm como "
-        "orientación. Si se solicita, localiza observaciones atípicas multivariantes con "
+        "orientación con stats::p.adjust(p, method = 'holm'), siempre en minúscula sobre los p ya "
+        "limpiados: p.adjust valida el nombre con match.arg y escribir Holm detiene la ejecución. "
+        "Si se solicita, localiza observaciones atípicas multivariantes con "
         "multivariate_outlier_method igual a quan o adj, fijando outlier_seed para que el resultado "
         "sea reproducible, e informa de las observaciones señaladas con su distancia de Mahalanobis "
         "sin eliminar ningún caso. MVN puede aplicar transformaciones de potencia mediante transform "
@@ -974,6 +986,19 @@ for name in ("ANCOVA", "Análisis de supervivencia", "Moderación", "Modelo mult
              "Regresión", "Regresión logística", "Regresión multinomial", "Regresión ordinal",
              "Regresión para recuentos"):
     TEMPLATES[name] += DESIGN_CODING
+LAVAAN_ROWS = (
+    " Al leer lavaan::parameterEstimates o standardizedSolution, filtra las filas por lo que son y "
+    "no supongas que hay una por indicador: las filas con op igual a ~~ y lhs igual a rhs incluyen "
+    "las varianzas de los indicadores y además la de cada variable latente, de modo que con k "
+    "indicadores y un factor salen k+1 y cualquier data.frame que las combine con las k cargas se "
+    "detiene con el error los argumentos implican un número diferente de filas. Selecciona las "
+    "varianzas de error exigiendo que lhs esté entre los nombres de los indicadores, empareja cada "
+    "carga con la varianza del mismo indicador por nombre y no por posición, y comprueba la longitud "
+    "de los vectores antes de construir la tabla."
+)
+for name in ("Análisis factorial confirmatorio", "Consistencia interna",
+             "Invarianza de medida", "Mediación"):
+    TEMPLATES[name] += LAVAAN_ROWS
 TEMPLATES = {name: prompt + (
     " En todos los cálculos documenta ausentes, n efectivo y exclusiones, sin imputar ni recodificar "
     "silenciosamente. Salvo hipótesis direccional previa, usa contrastes bilaterales, alfa=0,05 e "
@@ -982,6 +1007,11 @@ TEMPLATES = {name: prompt + (
     "No reimplementes a mano lo que R ya hace: usa p.adjust para los ajustes por comparaciones "
     "múltiples, y en general la función del paquete en vez de reescribir su algoritmo. Mantén cada "
     "bloque de R centrado y corto; un bloque larguísimo agota el límite de salida y llega truncado. "
+    "Reparte el análisis en varios bloques si hace falta: puedes enviar un bloque nuevo después de "
+    "recibir la salida del anterior, y así hasta completar todo lo pedido. Ninguna prueba solicitada "
+    "puede quedar sin ejecutar: no escribas que algo queda pendiente, no calculado o para una salida "
+    "posterior, porque nadie va a pedirlo después. Si una prueba concreta no es estimable con estos "
+    "datos, dilo con su motivo técnico, y calcula todas las demás. "
     "Los datos ya están cargados en el data.frame dat, con las variables seleccionadas: úsalo "
     "tal cual y no inventes otro nombre como datos o df, porque no existen y el bloque falla "
     "en la primera línea. Para un subconjunto, derívalo de dat en el propio bloque. "
@@ -1159,6 +1189,7 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
     last_ok, last_output = False, ""
     last_syntax_error = None
     r_attempts, syntax_errors, help_rounds = 0, 0, 0
+    fence_asked = False
     calculated = []
 
     def finish(answer):
@@ -1213,6 +1244,17 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
             help_text = engine.chat_r_help(rs, topics, temp_dir=folder)
             context.append("AYUDA R:\n" + (help_text or "Ayuda no disponible."))
             continue
+        # Código R sin cerca ```r: extract_r no lo ve, se mostraría como prosa y el análisis
+        # quedaría sin ejecutar. Se pide una sola vez, bien marcado.
+        if (not code and enabled and profile and rs and not fence_asked
+                and engine.unfenced_r(response)):
+            fence_asked = True
+            engine.log("PASO: La respuesta traía código R sin marcar; pidiéndolo como bloque ejecutable")
+            context.extend(["ASISTENTE:\n" + response,
+                            "Ese código R no se ha ejecutado porque llegó sin la cerca de apertura "
+                            "```r. Reenvía solo ese bloque, completo y autocontenido, dentro de una "
+                            "cerca ```r, sin mezclar la interpretación con el código."])
+            continue
         if not code or not enabled:
             if last_syntax_error:
                 response = "No se ejecutó el último código R: contenía un error de sintaxis.\n\n" + response
@@ -1229,7 +1271,10 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
             ok, output = engine.chat_run_r(code, profile, rs, timeout=request.get("timeout", 300), temp_dir=folder)
             engine.log(f"PASO: R terminó en {_time.perf_counter() - inicio:.1f} s; "
                        + ("enviando sus resultados para interpretarlos" if ok
-                          else "devolviendo el error para que lo corrija"))
+                          # Sin el motivo en el registro, un bloque rechazado es indiagnosticable:
+                          # la carpeta de la operación se borra al terminar la sesión.
+                          else "devolviendo el error para que lo corrija: "
+                               + " ".join(output.strip().splitlines()[-3:])[:300]))
         except engine.RSyntaxError as exc:
             syntax_errors += 1
             last_syntax_error = str(exc)
@@ -1260,8 +1305,14 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
                     "context_answer": "Se ejecutó R; la salida se conservó sólo localmente."}
         context.extend(["ASISTENTE:\n" + code,
                         f"SALIDA R ({'OK' if ok else 'ERROR'}):\n{output}",
-                        "Interpreta la salida sin bloque R si responde a la petición; "
-                        "si falló, devuelve código corregido. No inventes cifras."])
+                        # Sin esta aclaración el modelo cerraba el turno dejando los diagnósticos
+                        # anunciados como pendientes: creía que ya no podía enviar más código.
+                        "Si falló, devuelve código corregido. Si la petición pide cálculos que esta "
+                        "salida todavía no contiene, devuelve otro bloque R con los que falten, "
+                        "siempre dentro de una cerca ```r, porque sin ella no se ejecuta: "
+                        f"quedan {6 - r_attempts} ejecuciones disponibles. Interpreta la salida sin "
+                        "bloque R solo cuando no quede nada por calcular, y entonces no anuncies "
+                        "ninguna prueba como pendiente. No inventes cifras."])
     raise RuntimeError("No se obtuvo respuesta.")
 
 

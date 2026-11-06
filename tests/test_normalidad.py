@@ -373,6 +373,11 @@ def test_el_prompt_fija_los_nombres_de_columna_con_sus_mayusculas():
     prompt = app.TEMPLATES["Normalidad"]
     assert "Test, Statistic, p.value, Method y MVN" in prompt
     assert "minúscula devuelve NULL" in prompt
+    # univariate_normality no trae Method ni MVN: pedírselas vaciaba el data.frame y abortaba.
+    assert "Test, Variable, Statistic, p.value y Normality, sin Method y sin MVN" in prompt
+    assert "u$Variable" in prompt and "grepl('Not normal', ...)" in prompt
+    # p.adjust valida el método con match.arg: Holm en mayúscula detenía la ejecución.
+    assert "stats::p.adjust(p, method = 'holm')" in prompt and "siempre en minúscula" in prompt
 
 
 def test_ninguna_plantilla_reimplementa_lo_que_r_ya_trae():

@@ -150,3 +150,41 @@ def test_fiabilidad_real_con_coefficientalpha_en_cinco_etapas(tmp_path):
     assert all(label.replace("_", r"\_") in result["answer"]
                for label in ("Alfa_bruto", "Alfa_estandarizado", "Omega_total", "Omega_estandarizado", "Alfa_sin_item", "Omega_sin_item"))
     assert "Último error" not in result["answer"]
+
+
+SIN_CERCA = """# =====================================
+# BLOQUE 3: alfa ordinal
+# =====================================
+items <- c("SV1","SV2","SV3")
+X <- dat[, items, drop=FALSE]
+cat("n:", nrow(X), "\n")
+tabla(data.frame(alfa=0.81))
+"""
+
+
+def test_el_codigo_sin_cerca_se_pide_otra_vez_en_lugar_de_mostrarse(calculation, monkeypatch):
+    """Sin esto el bloque llegaba como prosa: el usuario veía el código y ningún resultado."""
+    request, folder = calculation
+    calls = []
+    monkeypatch.setattr(app.engine, "chat_run_r", lambda *a, **kw: (calls.append(a[0]) or True, TABLE))
+    backend = Backend([SIN_CERCA, CODE, "El alfa calculado es 0.81."])
+    result = app.converse(request, folder, backend)
+    assert len(calls) == 1, "el código reenviado con cerca debe ejecutarse"
+    assert "cerca de apertura" in backend.prompts[1]
+    assert "items <- c" not in result["answer"], "el código no puede acabar en la respuesta"
+    assert "El alfa calculado" in result["answer"] and TABLE in result["answer"]
+
+
+def test_solo_se_reclama_la_cerca_una_vez(calculation, monkeypatch):
+    request, folder = calculation
+    monkeypatch.setattr(app.engine, "chat_run_r", lambda *a, **kw: (True, TABLE))
+    backend = Backend([SIN_CERCA, SIN_CERCA])
+    result = app.converse(request, folder, backend)
+    assert len(backend.prompts) == 2
+    assert "BLOQUE 3" in result["answer"]
+
+
+def test_una_interpretacion_normal_no_se_confunde_con_codigo():
+    assert not app.engine.unfenced_r(TABLE)
+    assert not app.engine.unfenced_r("El alfa es 0.81 y el omega 0.83; la precisión es estrecha.")
+    assert app.engine.unfenced_r(SIN_CERCA)

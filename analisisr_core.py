@@ -72,6 +72,15 @@ def extract_r(text: str) -> str:
         return text.strip()
     return ""
 
+R_SIN_CERCA = re.compile(
+    r"^\s*(?:[\w.]+\s*(?:\[[^\]]*\])?\s*<-\s*\S|"
+    r"(?:cat|tabla|set\.seed|stopifnot|print|suppressWarnings|suppressMessages|"
+    r"capture\.output|library|requireNamespace)\s*\()", re.M)
+
+def unfenced_r(text: str) -> bool:
+    """El modelo mandó código R sin cerca ```r: no se ejecutaría y se vería como prosa."""
+    return "```" not in text and len(R_SIN_CERCA.findall(text)) >= 3
+
 # AnalisisR no incluye R: usa la instalación del usuario, igual que EasySEM.
 RSCRIPT_NAME = "Rscript.exe" if sys.platform.startswith("win") else "Rscript"
 # Windows guarda además los binarios en bin/x64; mac y Linux solo en bin.
