@@ -378,3 +378,34 @@ def test_se_documentan_todas_las_funciones_de_la_plantilla_mas_grande():
 
     mayor = max((len(app.funciones_a_documentar(p)) for p in app.TEMPLATES.values()))
     assert mayor <= engine.FIRMAS_MAX, (mayor, engine.FIRMAS_MAX)
+
+
+def test_los_prompts_explican_como_tabular_un_vector_con_nombres():
+    """fitMeasures, AVE y compRelSEM devuelven vectores: as.data.frame() rompía la tabla."""
+    for name, prompt in app.TEMPLATES.items():
+        assert "data.frame(Indice = names(x), Valor = as.numeric(x), row.names = NULL)" in prompt, name
+        assert "names attribute must be the same length as the vector" in prompt, name
+    for name in ("Análisis factorial confirmatorio", "Invarianza de medida", "Mediación"):
+        prompt = app.TEMPLATES[name]
+        assert "data.frame(Indice = names(fm), Valor = as.numeric(fm)" in prompt, name
+        # Comprobado en lavaan 0.7.3: los robustos mantienen el punto y srmr no tiene escalado.
+        assert "chisq.scaled" in prompt and "srmr no tiene versión escalada" in prompt, name
+
+
+def test_el_registro_nombra_todos_los_paquetes_consultados(tmp_path, monkeypatch, capsys):
+    """Con la lista recortada no se veía si semTools se había comprobado."""
+    class Backend:
+        last_truncated = False
+
+        def chat(self, system, user):
+            return "Sin cálculo."
+
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: "Rscript")
+    monkeypatch.setattr(app.engine, "function_signatures", lambda *a, **kw: "firmas")
+    monkeypatch.setattr(app.engine, "diagnose_r", lambda: {"packages": []})
+    app.converse({"ask": "modelo con lavaan, normalidad con MVN y validez con semTools",
+                  "profile": None, "run_r": True}, tmp_path, Backend())
+    linea = [l for l in capsys.readouterr().out.splitlines() if "firma real" in l][0]
+    for paquete in ("MVN", "lavaan", "semTools"):
+        assert paquete in linea, (paquete, linea)
+    assert "…" not in linea

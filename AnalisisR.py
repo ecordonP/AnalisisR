@@ -1088,7 +1088,15 @@ LAVAAN_ROWS = (
     "trae su error estándar, o de la matriz theta, y la varianza explicada de cada ecuación es "
     "rsquare. Ante cualquier duda sobre un argumento de lavaan, consulta su ayuda respondiendo "
     "AYUDA: lavaan::lavInspect en vez de probar un nombre inventado, que cuesta una ejecución."
-    " El número de parámetros libres es lavaan::fitMeasures(ajuste, 'npar'), un número con nombre; "
+    " lavaan::fitMeasures devuelve un vector numérico con nombres, no una tabla: as.data.frame() "
+    "sobre él produce una sola columna y asignarle después los nombres de los índices detiene el "
+    "bloque con names attribute must be the same length as the vector. Construye la tabla "
+    "siempre así: data.frame(Indice = names(fm), Valor = as.numeric(fm), row.names = NULL). Con "
+    "estimadores robustos como WLSMV o MLR los índices escalados conservan el punto en su nombre, "
+    "chisq.scaled, df.scaled, pvalue.scaled, cfi.scaled, tli.scaled y rmsea.scaled, y existen "
+    "además cfi.robust, tli.robust y rmsea.robust; srmr no tiene versión escalada, así que pedir "
+    "srmr.scaled avisa de unknown fit measure y devuelve un valor vacío que rompe la tabla. "
+    "El número de parámetros libres es lavaan::fitMeasures(ajuste, 'npar'), un número con nombre; "
     "lavInspect con free devuelve una lista de matrices y pasarla a cat detiene el bloque con el "
     "argumento no es soportado por 'cat'. Envuelve en as.numeric() o unname() todo lo que imprimas "
     "con cat, que solo acepta vectores atómicos."
@@ -1123,7 +1131,12 @@ MVN_CALL = (
     "llamada con mardia devuelve dos filas, asimetría y curtosis, y cada una de las demás pruebas "
     "una sola: no escribas a mano un vector con los nombres de las pruebas, porque en cuanto no "
     "coincide con las filas devueltas el bloque se detiene con los argumentos implican un número "
-    "diferente de filas. Combina las filas con do.call(rbind, ...) y toma los nombres de la columna "
+    "diferente de filas. Y como Doornik-Hansen devuelve además la columna df y las demás pruebas "
+    "no, no pases los componentes tal cual a do.call(rbind, ...): se detiene con el número de "
+    "columnas de los argumentos no coincide. Construye en cada prueba un data.frame con las "
+    "mismas columnas, por ejemplo Prueba, Estadistico, p y Metodo, y deja los grados de libertad "
+    "en una columna de texto que escribas tú siempre. Combina después con do.call(rbind, ...) y "
+    "toma los nombres de la columna "
     "Test. El p.value es texto y puede llegar como <0.001: límpialo con "
     "sub('>', '', sub('<', '', trimws(as.character(p.value)))) antes de compararlo con alfa. El "
     "componente univariate_normality trae Test, Variable, Statistic, p.value y Normality, sin "
@@ -1181,6 +1194,12 @@ TEMPLATES = {name: prompt + (
     "puede quedar sin ejecutar: no escribas que algo queda pendiente, no calculado o para una salida "
     "posterior, porque nadie va a pedirlo después. Si una prueba concreta no es estimable con estos "
     "datos, dilo con su motivo técnico, y calcula todas las demás. "
+    "Muchas funciones de R devuelven un vector con nombres, no una tabla. Para pasarlo a tabla "
+    "usa siempre data.frame(Indice = names(x), Valor = as.numeric(x), row.names = NULL): "
+    "as.data.frame() sobre un vector con nombres crea una sola columna y asignarle después los "
+    "nombres del vector detiene el bloque con names attribute must be the same length as the "
+    "vector. Comprueba la forma con str() o length() antes de combinar dos resultados en la "
+    "misma tabla. "
     "Antes de redondear, promediar o comparar, comprueba que la columna es numérica: round() o "
     "mean() sobre texto detienen el bloque con argumento no numérico para una función matemática, "
     "y varias columnas que R devuelve como p, gl o conclusiones son cadenas. "
@@ -1632,8 +1651,11 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
     if enabled and rs:
         objetivo = funciones_a_documentar(request["ask"])
         if objetivo:
-            engine.log("PASO: Consultando en R la firma real de " + ", ".join(objetivo[:4])
-                       + (", …" if len(objetivo) > 4 else ""))
+            # Los paquetes se nombran todos: con la lista recortada no se veía si una
+            # biblioteca pedida en la consulta se había comprobado o no.
+            paquetes = list(dict.fromkeys(f.split("::")[0] for f in objetivo))
+            engine.log(f"PASO: Consultando en R la firma real de {len(objetivo)} funciones de "
+                       + ", ".join(paquetes))
             firmas = engine.function_signatures(rs, objetivo, temp_dir=folder)
             if firmas:
                 context.append(
