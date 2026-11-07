@@ -27,7 +27,7 @@ def test_los_tipos_declarados_se_guardan_junto_a_los_datos(datos):
     sidecar = Path(profile["metadata_file"])
     assert sidecar == engine.metadata_path(source) and sidecar.is_file()
     guardado = json.loads(sidecar.read_text(encoding="utf-8"))
-    assert guardado["schema"] == "analisisr.metadata/1"
+    assert guardado["schema"] == "analizar.metadata/1"
     assert guardado["classes"] == tipos and guardado["data_file"] == source.name
 
 

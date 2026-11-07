@@ -6,7 +6,7 @@ Cifrado en reposo:
   - Windows: DPAPI (`CryptProtectData`), ligado a la cuenta de usuario. Sin contraseña
     que recordar y sin clave maestra que se pueda copiar junto al archivo.
   - Otros sistemas: `cryptography.fernet` con clave derivada por PBKDF2 de una frase
-    de paso, o `$ANALISISR_MASTER_KEY`. Si no hay forma segura de cifrar, se niega a
+    de paso, o `$ANALIZAR_MASTER_KEY`. Si no hay forma segura de cifrar, se niega a
     guardar en claro en lugar de fingir que protege.
 
 El archivo sólo contiene: proveedor, endpoint, modelo y el token cifrado.
@@ -17,12 +17,17 @@ from __future__ import annotations
 import base64
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 from analisisr_session import temporary_file, replace_file
 
-APP_DIR_NAME = "AnalisisR"
+APP_DIR_NAME = "AnalizaR Desktop"
+# Nombre anterior del programa: su carpeta se migra una vez para no perder los perfiles.
+LEGACY_APP_DIR_NAME = "AnalisisR"
 FILE_NAME = "backends.json"
+# El servicio del keyring conserva el nombre antiguo a propósito: ahí está la clave maestra
+# que descifra los perfiles ya guardados, y renombrarlo los dejaría ilegibles.
 KEYRING_SERVICE = "AnalisisR"
 KEYRING_PREFIX = "keyring:"
 
@@ -39,8 +44,24 @@ def config_dir() -> Path:
     else:
         base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
     d = Path(base) / APP_DIR_NAME
+    nueva = not d.exists()
     d.mkdir(parents=True, exist_ok=True)
+    if nueva:
+        _migrate_legacy(Path(base) / LEGACY_APP_DIR_NAME, d)
     return d
+
+
+def _migrate_legacy(antigua: Path, nueva: Path) -> None:
+    """Copia la configuración del nombre anterior; el original se conserva intacto."""
+    if antigua == nueva or antigua.is_symlink() or not antigua.is_dir():
+        return
+    for origen in antigua.iterdir():
+        if not origen.is_file() or origen.is_symlink():
+            continue
+        try:
+            shutil.copy2(origen, nueva / origen.name)
+        except OSError:
+            pass
 
 
 def config_path() -> Path:
@@ -94,10 +115,12 @@ def _fernet(passphrase: str | None = None):
         raise RuntimeError(
             "Para cifrar API keys en este sistema hace falta el paquete 'cryptography':\n"
             "  python -m pip install cryptography") from e
-    secreto = passphrase or os.environ.get("ANALISISR_MASTER_KEY")
+    # El nombre anterior se sigue aceptando: con otra clave maestra no se descifraría nada.
+    secreto = (passphrase or os.environ.get("ANALIZAR_MASTER_KEY")
+               or os.environ.get("ANALISISR_MASTER_KEY"))
     if not secreto:
         raise RuntimeError(
-            "Define ANALISISR_MASTER_KEY (o pasa una frase de paso) para cifrar las claves.")
+            "Define ANALIZAR_MASTER_KEY (o pasa una frase de paso) para cifrar las claves.")
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=b"analisisr-keystore-v1",
                      iterations=390000)
     return Fernet(base64.urlsafe_b64encode(kdf.derive(secreto.encode())))
@@ -212,7 +235,7 @@ def load(path: Path | None = None) -> dict:
 def save(profiles: dict, path: Path | None = None) -> Path:
     f = path or config_path()
     f.parent.mkdir(parents=True, exist_ok=True)
-    payload = {"schema": "analisisr.backends/1", "profiles": profiles}
+    payload = {"schema": "analizar.backends/1", "profiles": profiles}
     with temporary_file() as tmp:
         tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         try:
@@ -264,7 +287,7 @@ def check() -> dict:
     else:
         try:
             _fernet(None)
-            disponible, metodo = True, "Fernet (PBKDF2 con ANALISISR_MASTER_KEY)"
+            disponible, metodo = True, "Fernet (PBKDF2 con ANALIZAR_MASTER_KEY)"
         except RuntimeError as e:
             disponible, metodo = False, str(e)
     ok_kr, detalle_kr = keyring_disponible()

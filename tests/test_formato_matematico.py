@@ -45,7 +45,7 @@ def test_chat_formatea_formulas_negrita_y_tablas_sin_html_activo():
     source = ("**Contraste**\n\n" + EXAMPLE + "\n\n"
               "| Parámetro | Resultado |\n| --- | --- |\n| $\\mu$ | $p < 0.05$ |\n\n"
               '```r\nprint("$H_0$")\n```')
-    ui.render_chat(browser, "AnalisisR", source)
+    ui.render_chat(browser, "AnalizaR Desktop", source)
     text = browser.toPlainText()
     assert EXPECTED in text and '**' not in text
     assert 'print("$H_0$")' in text

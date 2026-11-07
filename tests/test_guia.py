@@ -52,7 +52,7 @@ def test_la_guia_describe_las_pestanas_reales():
     codigo = (app.ROOT / "AnalisisR.py").read_text(encoding="utf-8")
     pestanas = re.findall(r'addTab\(page, "([^"]+)"\)', codigo)
     page = (app.ROOT / "assets" / "guia.html").read_text(encoding="utf-8")
-    tabla = page.split("<caption>Las cuatro pestañas de AnalisisR</caption>", 1)[1].split("</table>", 1)[0]
+    tabla = page.split("<caption>Las cuatro pestañas de AnalizaR Desktop</caption>", 1)[1].split("</table>", 1)[0]
     assert len(pestanas) == 4
     assert re.findall(r"<tr><td>([^<]+)</td>", tabla) == pestanas
 

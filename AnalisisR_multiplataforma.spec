@@ -16,7 +16,7 @@ SOURCES = ["AnalisisR.py", "analisisr_core.py", "analisisr_ui.py", "analisisr_se
            "analisisr_session.py", "analisisr_docx.py"]
 ES_WINDOWS = sys.platform.startswith("win")
 # El icono .ico solo lo aprovecha Windows; en macOS haría falta un .icns propio.
-ICONO = str(ROOT / "assets" / "analisisr.ico") if ES_WINDOWS else None
+ICONO = str(ROOT / "assets" / "analizar.ico") if ES_WINDOWS else None
 
 a = Analysis(
     [str(ROOT / "AnalisisR.py")], pathex=[str(ROOT)], binaries=[],
@@ -34,6 +34,6 @@ pyz = PYZ(a.pure)
 common = dict(exclude_binaries=True, debug=False, strip=False, upx=False, icon=ICONO)
 # El nombre del trabajador debe ser exactamente este: la interfaz lo busca junto a sí misma
 # y le añade .exe solo en Windows.
-gui = EXE(pyz, a.scripts, [], name="AnalisisR", console=False, **common)
-worker = EXE(pyz, a.scripts, [], name="AnalisisRWorker", console=True, **common)
-coll = COLLECT(gui, worker, a.binaries, a.datas, strip=False, upx=False, name="AnalisisR")
+gui = EXE(pyz, a.scripts, [], name="AnalizaR", console=False, **common)
+worker = EXE(pyz, a.scripts, [], name="AnalizaRWorker", console=True, **common)
+coll = COLLECT(gui, worker, a.binaries, a.datas, strip=False, upx=False, name="AnalizaR")

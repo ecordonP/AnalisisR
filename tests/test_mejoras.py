@@ -22,10 +22,10 @@ def test_sesion_reabre_datos_y_codigo_sin_depender_del_origen(tmp_path):
     profile = app.prepare_data({"data": str(source)}, operation)
     script = operation / "analisis_1.R"
     script.write_text(app.engine.chat_r_script("tabla(dat)", profile), encoding="utf-8")
-    app.write_json(operation / "manifest.json", {"schema": "analisisr.operation/1", "artifacts": {}})
+    app.write_json(operation / "manifest.json", {"schema": "analizar.operation/1", "artifacts": {}})
     state = {"profile": profile, "data_request": {"data": str(source), "keep": ["x", "y"]}, "history": [{"role": "assistant", "content": "Resultado",
                                               "context": "Resultado local", "scripts": [str(script)]}]}
-    archive = tmp_path / "saved.analisisr"
+    archive = tmp_path / "saved.analizar"
     sessions.save_session(archive, old, state)
     source.unlink()
     assert old.resolve().is_relative_to(tmp_path.resolve())
@@ -48,7 +48,7 @@ def test_sesion_reabre_datos_y_codigo_sin_depender_del_origen(tmp_path):
 
 @pytest.mark.parametrize("entry", ["../escape.txt", "artifacts/../../escape.txt", "C:/escape.txt", "artifacts/..\\escape.txt"])
 def test_sesion_rechaza_rutas_fuera_de_su_carpeta(tmp_path, entry):
-    archive = tmp_path / "bad.analisisr"
+    archive = tmp_path / "bad.analizar"
     with zipfile.ZipFile(archive, "w") as z:
         z.writestr("session.json", json.dumps({"schema": sessions.SCHEMA, "root": "old", "state": {}}))
         z.writestr(entry, "bad")
@@ -58,7 +58,7 @@ def test_sesion_rechaza_rutas_fuera_de_su_carpeta(tmp_path, entry):
 
 
 def test_error_guardando_sesion_no_sobrescribe_archivo_anterior(tmp_path):
-    archive = tmp_path / "saved.analisisr"
+    archive = tmp_path / "saved.analizar"
     archive.write_bytes(b"previous-session")
     folder = tmp_path / "work"
     folder.mkdir()
@@ -69,7 +69,7 @@ def test_error_guardando_sesion_no_sobrescribe_archivo_anterior(tmp_path):
 
 def test_word_conserva_tablas_y_codigo_literal(tmp_path):
     markdown = '## Resultados\n\n| Variable | Media |\n| --- | --- |\n| x | 2 |\n\n### Código R\n\n```r\n  a_b <- 1 < 2\nprint(a_b)\n```'
-    output = documents.markdown_to_docx(markdown, tmp_path / "report.docx", titulo="AnalisisR")
+    output = documents.markdown_to_docx(markdown, tmp_path / "report.docx", titulo="AnalizaR Desktop")
     docx = pytest.importorskip("docx")
     document = docx.Document(output)
     assert document.tables[0].cell(1, 1).text == "2"
@@ -143,3 +143,44 @@ def test_trabajador_ejecuta_codigo_con_r_real_sin_confirmaciones(tmp_path, monke
     result = json.loads((folder / "result.json").read_text(encoding="utf-8"))
     assert "| Media |" in result["answer"] and "| 2 |" in result["answer"]
     assert Path(result["scripts"][-1]).is_file()
+
+
+def test_una_sesion_del_nombre_anterior_sigue_abriendose(tmp_path):
+    """El esquema analisisr.session/1 debe seguir cargando tras el cambio de nombre."""
+    import json
+    import zipfile
+
+    import analisisr_session as sessions
+
+    folder = tmp_path / "trabajo"
+    folder.mkdir()
+    estado = {"profile": None, "history": [],
+              "endpoint": {"backend": "none", "host": "", "model": "", "max_tokens": 1000, "timeout": 60},
+              "question": ""}
+    antigua = tmp_path / "vieja.analisisr"
+    with zipfile.ZipFile(antigua, "w") as archivo:
+        archivo.writestr("session.json", json.dumps(
+            {"schema": "analisisr.session/1", "root": str(folder), "state": estado,
+             "source": None, "source_entry": None}, ensure_ascii=False))
+    destino = tmp_path / "destino"
+    destino.mkdir()
+    assert sessions.load_session(antigua, destino)["endpoint"]["backend"] == "none"
+
+
+def test_la_configuracion_del_nombre_anterior_se_migra(tmp_path, monkeypatch):
+    """Sin esto el cambio de nombre dejaría atrás los perfiles y la ruta de R guardadas."""
+    import analisisr_secrets as secrets
+
+    monkeypatch.setenv("APPDATA", str(tmp_path))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setattr(secrets.os.path, "expanduser", lambda path: str(tmp_path))
+    antigua = tmp_path / secrets.LEGACY_APP_DIR_NAME
+    antigua.mkdir()
+    (antigua / "backends.json").write_text('{"profiles": {"deepseek": {"model": "x"}}}', encoding="utf-8")
+    (antigua / "entorno_r.json").write_text('{"r_home": "C:/R"}', encoding="utf-8")
+    nueva = secrets.config_dir()
+    assert nueva.name == secrets.APP_DIR_NAME
+    assert secrets.load() == {"deepseek": {"model": "x"}}
+    assert (nueva / "entorno_r.json").is_file()
+    # El original no se toca: si el usuario vuelve a la versión anterior, sigue ahí.
+    assert (antigua / "backends.json").is_file()

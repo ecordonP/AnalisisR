@@ -76,7 +76,7 @@ def test_sesion_se_guarda_y_reabre_despues_de_limpiar(workspace, tmp_path):
     workspace.suspend()
     assert not workspace.folder.exists()
     workspace.restore()
-    archive = tmp_path / "saved.analisisr"
+    archive = tmp_path / "saved.analizar"
     sessions.save_session(archive, workspace.folder, state)
     workspace.suspend()
     loaded = sessions.load_session(archive, tmp_path / "loaded")
@@ -96,7 +96,7 @@ def test_r_funciona_tras_restaurar_y_limpia_su_carpeta_auxiliar(workspace, tmp_p
     workspace.restore()
     ok, output = app.engine.chat_run_r("tabla(data.frame(Media=mean(dat$x)))", profile, rs, temp_dir=workspace.folder)
     assert ok and "| 2 |" in output
-    assert not list(workspace.folder.glob("analisisr_chat_r_*"))
+    assert not list(workspace.folder.glob("analizar_chat_r_*"))
     workspace.suspend()
     assert not workspace.folder.exists()
 
@@ -110,7 +110,7 @@ def test_entorno_temporal_apunta_al_directorio_de_la_operacion(tmp_path, monkeyp
     monkeypatch.setattr(sessions.tempfile, "tempdir", sessions.tempfile.tempdir)
     for name in ("TEMP", "TMP", "TMPDIR"):
         monkeypatch.setenv(name, os.environ.get(name, ""))
-    operation = root / "AnalisisR_test" / "operacion_001"
+    operation = root / "AnalizaR Desktop_test" / "operacion_001"
     sessions.configure_temporaries(operation)
     assert sessions.tempfile.gettempdir() == str(operation.resolve())
     assert all(os.environ[name] == str(operation.resolve()) for name in ("TEMP", "TMP", "TMPDIR"))
@@ -118,7 +118,7 @@ def test_entorno_temporal_apunta_al_directorio_de_la_operacion(tmp_path, monkeyp
 
 def test_temporales_congelados_estan_junto_al_ejecutable(tmp_path, monkeypatch):
     monkeypatch.setattr(sessions.sys, "frozen", True, raising=False)
-    monkeypatch.setattr(sessions.sys, "executable", str(tmp_path / "AnalisisR.exe"))
+    monkeypatch.setattr(sessions.sys, "executable", str(tmp_path / "AnalizaR.exe"))
     assert sessions.temporary_root() == tmp_path / "temporales"
 
 
@@ -129,12 +129,12 @@ def test_guardar_en_otra_unidad_conserva_archivos_existentes(workspace, tmp_path
         raise OSError(errno.EXDEV, "otra unidad")
 
     monkeypatch.setattr(sessions.os, "replace", cross_device)
-    saved = tmp_path / "saved.analisisr"
+    saved = tmp_path / "saved.analizar"
     saved.write_bytes(b"sesion anterior")
     with pytest.raises(FileExistsError):
         sessions.save_session(saved, workspace.folder, {})
     assert saved.read_bytes() == b"sesion anterior"
-    other = tmp_path / "new.analisisr"
+    other = tmp_path / "new.analizar"
     sessions.save_session(other, workspace.folder, {})
     assert sessions.load_session(other, tmp_path / "loaded") == {}
     assert not list(workspace.folder.glob("*.tmp"))

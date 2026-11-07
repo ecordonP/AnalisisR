@@ -12,7 +12,10 @@ import sys
 import tempfile
 import zipfile
 
-SCHEMA = "analisisr.session/1"
+SCHEMA = "analizar.session/1"
+# Esquemas del nombre anterior del programa: las sesiones ya guardadas siguen abriéndose.
+SCHEMAS_ACEPTADOS = (SCHEMA, "analisisr.session/1")
+MANIFESTS_ACEPTADOS = ("analizar.operation/1", "analisisr.operation/1")
 # shortcut: hasta 1 GiB y 10000 archivos por sesión; ampliar si proyectos reales lo requieren.
 MAX_BYTES = 1024 ** 3
 MAX_FILES = 10000
@@ -36,7 +39,7 @@ def configure_temporaries(operation: Path | None = None) -> None:
 
 @contextmanager
 def temporary_file(suffix=".tmp"):
-    fd, name = tempfile.mkstemp(dir=temporary_root(), prefix="AnalisisR_", suffix=suffix)
+    fd, name = tempfile.mkstemp(dir=temporary_root(), prefix="AnalizaR_", suffix=suffix)
     os.close(fd)
     path = Path(name)
     try:
@@ -69,7 +72,7 @@ class SessionWorkspace:
     """Archivos de la sesión en memoria entre operaciones; disco solo mientras se usa."""
 
     def __init__(self):
-        self.folder = Path(tempfile.mkdtemp(prefix="AnalisisR_", dir=temporary_root())).resolve()
+        self.folder = Path(tempfile.mkdtemp(prefix="AnalizaR_", dir=temporary_root())).resolve()
         self._root = self.folder
         self.files: dict[str, bytes] = {}
 
@@ -215,7 +218,8 @@ def load_session(path: Path, folder: Path) -> dict:
                 raise ValueError("El índice de sesión es demasiado grande.")
             manifest = json.loads(archive.read(info))
             state = manifest.get("state")
-            if manifest.get("schema") != SCHEMA or not isinstance(manifest.get("root"), str) or not manifest["root"] or not isinstance(state, dict):
+            if (manifest.get("schema") not in SCHEMAS_ACEPTADOS or not isinstance(manifest.get("root"), str)
+                    or not manifest["root"] or not isinstance(state, dict)):
                 raise ValueError("Formato de sesión no compatible.")
             if not isinstance(state.get("history", []), list) or any(
                     not isinstance(t, dict) or t.get("role") not in ("user", "assistant")
@@ -268,7 +272,7 @@ def load_session(path: Path, folder: Path) -> dict:
                 item.write_text(relocate(item.read_text(encoding="utf-8")), encoding="utf-8")
         for item in folder.rglob("manifest.json"):
             manifest_data = json.loads(item.read_text(encoding="utf-8"))
-            if manifest_data.get("schema") == "analisisr.operation/1":
+            if manifest_data.get("schema") in MANIFESTS_ACEPTADOS:
                 manifest_data["artifacts"] = {
                     p.name: {"sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
                     for p in item.parent.iterdir() if p.is_file() and p.name != "manifest.json"}

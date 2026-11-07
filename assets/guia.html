@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Guía de AnalisisR: preparación de datos, endpoints de IA, ejecución local con R y catálogo de procedimientos estadísticos y paquetes recomendados.">
-<title>AnalisisR · Guía de uso y procedimientos estadísticos</title>
-<link rel="icon" type="image/png" href="analisisr-icon.png">
+<meta name="description" content="Guía de AnalizaR Desktop: preparación de datos, endpoints de IA, ejecución local con R y catálogo de procedimientos estadísticos y paquetes recomendados.">
+<title>AnalizaR Desktop · Guía de uso y procedimientos estadísticos</title>
+<link rel="icon" type="image/png" href="analizar-icon.png">
 <style>
 :root {
   color-scheme: light dark;
@@ -22,7 +22,7 @@ body { margin:0; background:var(--fondo); color:var(--tinta);
   font:16px/1.65 "Segoe UI",system-ui,-apple-system,sans-serif; }
 main { max-width:1080px; margin:auto; padding:48px 24px 80px; }
 h1 { font-size:2.1rem; margin:0; letter-spacing:-.02em; }
-header img { display:block; width:420px; max-width:100%; height:auto;
+header img { display:block; width:709px; max-width:100%; height:auto;
   background:#fff; border-radius:8px; padding:8px; }
 .lema { color:var(--tenue); margin:4px 0 0; }
 .version { display:inline-block; margin-top:18px; padding:4px 12px;
@@ -85,7 +85,7 @@ footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--borde);
 <a class="saltar" href="#contenido">Saltar al contenido</a>
 <main id="inicio">
 <header>
-  <h1><img src="analisisr-logo.png" alt="AnalisisR" width="420" height="140"></h1>
+  <h1><img src="analizar-logo.png" alt="AnalizaR Desktop" width="709" height="140"></h1>
   <p class="lema">Guía de uso y procedimientos estadísticos con R</p>
   <span class="version">Versión 1.0 · Ayuda local · Aplicación independiente</span>
 </header>
@@ -109,12 +109,12 @@ footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--borde);
 </nav>
 <article id="contenido">
 <h2 id="que-es">Qué hace la aplicación</h2>
-<p>AnalisisR es una aplicación de escritorio para preparar datos, plantear preguntas
+<p>AnalizaR Desktop es una aplicación de escritorio para preparar datos, plantear preguntas
 estadísticas en español y ejecutar código R en tu equipo. La IA propone el análisis;
 R calcula sobre las variables seleccionadas. Puedes conversar sin ejecutar R o
 autorizar su ejecución para obtener resultados con tus datos.</p>
 <table>
-<caption>Las cuatro pestañas de AnalisisR</caption>
+<caption>Las cuatro pestañas de AnalizaR Desktop</caption>
 <thead><tr><th scope="col">Pestaña</th><th scope="col">Qué permite hacer</th><th scope="col">Qué conviene comprobar</th></tr></thead>
 <tbody>
 <tr><td>1 · Entorno R</td><td>Ver la ruta de <code>Rscript</code> y la versión de R, indicar la carpeta de instalación si no se detecta, volver a detectarla sin cerrar la aplicación y comprobar los paquetes requeridos con su versión.</td><td>Es la única pestaña disponible mientras no se detecte R. Comprueba los paquetes antes de empezar: los que falten se instalan desde una consola de R.</td></tr>
@@ -129,15 +129,15 @@ permanecen deshabilitadas y ninguna operación se lanza.</p>
 <div class="nota"><p><b>Alcance del catálogo.</b> Los procedimientos siguientes orientan
 lo que puedes pedir a la IA. No son botones de análisis preprogramados ni garantizan
 que cualquier modelo se ajuste correctamente. El resultado depende del diseño,
-los datos, los paquetes instalados y el código generado. AnalisisR no realiza una
+los datos, los paquetes instalados y el código generado. AnalizaR Desktop no realiza una
 auditoría estadística automática.</p></div>
 
 <h2 id="inicio-rapido">Primeros pasos</h2>
 <ol>
-<li><b>Prepara R.</b> AnalisisR no incluye R y no funciona sin él: todos los procedimientos estadísticos se calculan en R. Instala R 4.x y sus paquetes, y comprueba el estado en la pestaña <b>Entorno R</b>. Si R está en una ruta poco habitual, indícala ahí y pulsa <b>Volver a detectar</b>. Mientras no se detecte, el resto de pestañas permanece deshabilitado.</li>
+<li><b>Prepara R.</b> AnalizaR Desktop no incluye R y no funciona sin él: todos los procedimientos estadísticos se calculan en R. Instala R 4.x y sus paquetes, y comprueba el estado en la pestaña <b>Entorno R</b>. Si R está en una ruta poco habitual, indícala ahí y pulsa <b>Volver a detectar</b>. Mientras no se detecte, el resto de pestañas permanece deshabilitado.</li>
 <li><b>Importa tus datos</b> desde la pestaña Datos o usa Abrir reciente para seleccionar uno de los cinco últimos archivos importados. Revisa los tipos de medida y selecciona las variables pertinentes.</li>
 <li><b>Aplica el tratamiento y la selección.</b> La aplicación conserva el archivo original. Los tipos
-de medida que hayas declarado se guardan en un archivo <code>.analisisr.json</code> junto a tus datos y se
+de medida que hayas declarado se guardan en un archivo <code>.analizar.json</code> junto a tus datos y se
 recuperan al importarlos de nuevo. Las variables marcadas como binarias se recodifican a 0 y 1 en la copia de
 trabajo, con su primera categoría como 0 y referencia; el registro indica la correspondencia y las etiquetas de
 valor se reasignan a los códigos nuevos.</li>
@@ -172,7 +172,7 @@ según tu servidor o cuenta. Los nombres de modelo son editables.</p>
 <p>Los valores iniciales son <b>64000 tokens de salida</b> y <b>300 segundos
 (5 minutos) por operación</b>, editables en Endpoints IA. El límite efectivo de
 salida depende también del modelo y del servidor.</p>
-<p>El <b>razonamiento está desactivado con presupuesto fijo 0</b>. AnalisisR envía
+<p>El <b>razonamiento está desactivado con presupuesto fijo 0</b>. AnalizaR Desktop envía
 el parámetro equivalente de cada proveedor al conversar y probar el modelo.
 Selecciona un modelo que permita desactivarlo: los que requieren razonamiento
 se rechazan, sin activarlo automáticamente como alternativa. Si el servidor
@@ -182,7 +182,7 @@ un error. Un servidor que no informa del consumo interno no permite verificarlo.
 la URL, el modelo configurado, el modelo informado por el servidor cuando esté
 disponible, modelos anunciados y avisos. Un modelo que no figura en el listado
 debe revisarse; no equivale a haber validado una generación con ese modelo.</p>
-<p>La clave puede guardarse cifrada mediante el almacén propio de AnalisisR.
+<p>La clave puede guardarse cifrada mediante el almacén propio de AnalizaR Desktop.
 Un campo vacío al guardar conserva la clave anterior. Cada proveedor también
 puede recibir su clave mediante sus variables de entorno.</p>
 
@@ -395,7 +395,7 @@ resume la relevancia práctica ni demuestra causalidad.</p></div>
 
 <h2 id="paquetes">Preparar los paquetes de R</h2>
 <p><b>Comprobar R y paquetes</b>, en la pestaña Entorno R (también en Ayuda →
-Diagnóstico de R y paquetes), confirma una a una todas las bibliotecas que AnalisisR
+Diagnóstico de R y paquetes), confirma una a una todas las bibliotecas que AnalizaR Desktop
 puede necesitar y muestra la versión de cada una o «No instalado», además de indicar
 si están todas disponibles. La lista comprobada es exactamente esta:</p>
 <p id="paquetes-comprobados"><code>stats</code>, <code>boot</code>, <code>MASS</code>,
@@ -408,7 +408,7 @@ si están todas disponibles. La lista comprobada es exactamente esta:</p>
 <p><code>stats</code>, <code>boot</code>, <code>MASS</code>, <code>nnet</code>,
 <code>cluster</code> y <code>survival</code> vienen con R; los demás se instalan.</p>
 <p>Instala solo los paquetes que necesites, desde una consola de R o RStudio,
-<b>fuera del chat de AnalisisR</b>. La aplicación bloquea
+<b>fuera del chat de AnalizaR Desktop</b>. La aplicación bloquea
 <code>install.packages()</code> en el código generado. Por ejemplo:</p>
 <pre><code># Ejecutar en una consola de R, una vez:
 install.packages(c("coefficientalpha", "psych", "effectsize", "emmeans"),
@@ -426,7 +426,7 @@ con las variables ordinales declaradas.</p>
 <code>mice</code>, <code>pROC</code> o <code>metafor</code>. Algunos paquetes pueden
 necesitar herramientas de compilación según tu sistema y la versión de R.</p>
 <p>Comprueba que la instalación corresponda al R que usa la aplicación. Puedes
-pedir a AnalisisR que imprima <code>R.version.string</code>, <code>.libPaths()</code>
+pedir a AnalizaR Desktop que imprima <code>R.version.string</code>, <code>.libPaths()</code>
 y <code>packageVersion("psych")</code>. La IA puede consultar la ayuda de la versión
 instalada cuando necesita confirmar una función.</p>
 
@@ -458,12 +458,12 @@ pueden contener información sensible: revísalos antes de usar un servicio exte
 contener datos individuales si el análisis los imprime. Al desactivar el envío,
 la aplicación utiliza en el historial una indicación de que se calculó localmente,
 en lugar de reenviar la salida privada.</p>
-<p>Las claves se guardan en la configuración propia de AnalisisR mediante el
+<p>Las claves se guardan en la configuración propia de AnalizaR Desktop mediante el
 gestor de credenciales disponible o cifrado. No se importan automáticamente los
 perfiles de otras aplicaciones. En Windows se usa DPAPI cuando no hay gestor; en otros
-sistemas puede requerirse <code>ANALISISR_MASTER_KEY</code> para Fernet.</p>
+sistemas puede requerirse <code>ANALIZAR_MASTER_KEY</code> para Fernet.</p>
 <p><b>Limpieza de temporales.</b> Al finalizar cada operación, incluso con error
-o cancelación, AnalisisR conserva en memoria los datos, scripts y registros y
+o cancelación, AnalizaR Desktop conserva en memoria los datos, scripts y registros y
 elimina su carpeta temporal de disco. Los archivos se crean de nuevo solo cuando
 se necesitan para otra operación o para guardar una sesión. La exportación a Word
 y Mostrar código R siguen disponibles. Al cerrar se detiene el proceso activo,
@@ -471,7 +471,7 @@ se elimina cualquier archivo propio restante y se descarta la memoria. Guarda
 una sesión desde Archivo si quieres continuar más adelante.</p>
 <p>Todos los temporales de la aplicación y sus procesos R se crean en
 <code>temporales</code>, dentro del directorio del programa: por defecto
-<code>C:\AnalisisR\temporales</code>. Esta ubicación requiere permiso de escritura.
+<code>C:\AnalizaR\temporales</code>. Esta ubicación requiere permiso de escritura.
 Para guardar sesiones en otra unidad, utiliza un nombre nuevo; así se conserva
 cualquier archivo anterior sin crear temporales fuera de la instalación.</p>
 <p>La limpieza se limita a carpetas creadas por esta instancia; conserva archivos
@@ -494,10 +494,10 @@ interpretes resultados fallidos o truncados como un análisis terminado.</p></di
 <thead><tr><th scope="col">Situación</th><th scope="col">Qué hacer</th><th scope="col">Dónde comprobarlo</th></tr></thead>
 <tbody>
 <tr><td>No se encuentra Rscript</td><td>Instala R 4.x. Se busca en <code>R_HOME</code>, en la carpeta indicada en Entorno R, en el <code>PATH</code> y en las instalaciones habituales (<code>C:/Program Files/R</code>). Indica la carpeta en Entorno R y pulsa Volver a detectar.</td><td>Equipo local y registro de la operación.</td></tr>
-<tr><td>Falta un paquete</td><td>Instálalo desde una consola de R y comprueba que esté en las bibliotecas del R usado por AnalisisR.</td><td>Sección <a href="#paquetes">Preparar los paquetes</a>.</td></tr>
+<tr><td>Falta un paquete</td><td>Instálalo desde una consola de R y comprueba que esté en las bibliotecas del R usado por AnalizaR Desktop.</td><td>Sección <a href="#paquetes">Preparar los paquetes</a>.</td></tr>
 <tr><td>Error de conexión o autorización</td><td>Comprueba URL, proveedor, clave y acceso al modelo. Para un servidor local verifica que esté en ejecución.</td><td>Resultado de Probar conexión, en Endpoints IA.</td></tr>
 <tr><td>El modelo no aparece en el listado</td><td>Copia un identificador válido de los modelos disponibles o verifica los permisos con tu proveedor.</td><td>Modelo configurado y avisos de conexión.</td></tr>
-<tr><td>Los tipos vuelven a los detectados</td><td>Aplica el tratamiento: los tipos se guardan en un archivo <code>.analisisr.json</code> junto a los datos. Si lo borras o mueves los datos sin él, se recalculan con la heurística.</td><td>Registro de la operación y pestaña Datos.</td></tr>
+<tr><td>Los tipos vuelven a los detectados</td><td>Aplica el tratamiento: los tipos se guardan en un archivo <code>.analizar.json</code> junto a los datos. Si lo borras o mueves los datos sin él, se recalculan con la heurística.</td><td>Registro de la operación y pestaña Datos.</td></tr>
 <tr><td>Tratamiento pendiente</td><td>Aplica la selección y recodificación después de cambiar variables o reglas.</td><td>Pestaña Datos.</td></tr>
 <tr><td>Error de sintaxis en R</td><td>La aplicación intenta corregirlo antes de ejecutar. Tras tres errores consecutivos detiene los reintentos y muestra el diagnóstico; no lo presenta como un cálculo completado.</td><td>Diagnóstico en el chat y registros conservados en la sesión en memoria; usa Guardar sesión para conservarlos en disco.</td></tr>
 <tr><td>Análisis sin interpretación final</td><td>Consulta las tablas obtenidas y el último error mostrado. El análisis puede estar incompleto; no deduzcas coeficientes que no se hayan calculado.</td><td>Chat y R y registros de la sesión en memoria.</td></tr>
@@ -506,7 +506,7 @@ interpretes resultados fallidos o truncados como un análisis terminado.</p></di
 </tbody></table>
 
 <h2 id="autoria">Autoría y condiciones de uso</h2>
-<p>AnalisisR 1.0 ha sido desarrollado por <b>Eulogio Cordón en 2026</b>.
+<p>AnalizaR Desktop 1.0 ha sido desarrollado por <b>Eulogio Cordón en 2026</b>.
 El software es de <b>uso libre y gratuito para investigación y docencia</b>.</p>
 
 <h2 id="fuentes">Documentación de referencia</h2>
@@ -523,9 +523,9 @@ requieren conexión; el contenido de esta guía se puede leer sin red.</p>
 la instalada. Para ejecutar, contrasta la firma y los argumentos con la ayuda
 de tu instalación; no es necesario instalar versiones de desarrollo.</p>
 </article>
-<footer>AnalisisR · Guía local de uso. Recomendaciones de paquetes consultadas el
+<footer>AnalizaR Desktop · Guía local de uso. Recomendaciones de paquetes consultadas el
 5 de noviembre de 2026. Contenido específico
-de AnalisisR.</footer>
+de AnalizaR Desktop.</footer>
 </main>
 <a class="subir" href="#inicio" aria-label="Volver al inicio de la guía" title="Volver al inicio">↑</a>
 </body>

@@ -1,4 +1,4 @@
-"""Motor propio de AnalisisR: datos, endpoints y ejecucion local de R.
+"""Motor propio de AnalizaR Desktop: datos, endpoints y ejecucion local de R.
 
 Modulo autonomo: no depende de ningun otro proyecto ni de instalaciones externas.
 """
@@ -81,7 +81,7 @@ def unfenced_r(text: str) -> bool:
     """El modelo mandó código R sin cerca ```r: no se ejecutaría y se vería como prosa."""
     return "```" not in text and len(R_SIN_CERCA.findall(text)) >= 3
 
-# AnalisisR no incluye R: usa la instalación del usuario, igual que EasySEM.
+# AnalizaR Desktop no incluye R: usa la instalación del usuario, igual que EasySEM.
 RSCRIPT_NAME = "Rscript.exe" if sys.platform.startswith("win") else "Rscript"
 # Windows guarda además los binarios en bin/x64; mac y Linux solo en bin.
 RSCRIPT_SUBDIRS = (("bin",), ("bin", "x64")) if sys.platform.startswith("win") else (("bin",),)
@@ -135,7 +135,7 @@ def rscript_in(home) -> Path | None:
 def find_rscript() -> str | None:
     """Busca Rscript en R_HOME, la ruta configurada, el PATH y las instalaciones detectadas.
 
-    Es la única pieza de R que AnalisisR necesita: todo el cálculo va por subproceso,
+    Es la única pieza de R que AnalizaR Desktop necesita: todo el cálculo va por subproceso,
     así que con encontrar Rscript basta. Sin R no hay alternativa en Python.
     """
     for home in (os.environ.get("R_HOME"), configured_r_home()):
@@ -344,17 +344,22 @@ def normalize_class(value: str | None) -> str | None:
 def metadata_path(data_path: Path) -> Path:
     """Archivo de metadatos junto a los datos: viaja con ellos y es legible.
 
-    Un sidecar (`datos.analisisr.json`) evita que la información se pierda al mover el
+    Un sidecar (`datos.analizar.json`) evita que la información se pierda al mover el
     proyecto de equipo, cosa que sí ocurriría guardándola sólo en la configuración local.
     """
     p = Path(data_path)
-    return p.with_name(p.stem + ".analisisr.json")
+    return p.with_name(p.stem + ".analizar.json")
 
 def load_metadata(data_path: Path) -> dict:
     """Lee el sidecar. Un archivo corrupto no rompe el perfilado: se ignora."""
     f = metadata_path(data_path)
     if not f.is_file():
-        return {}
+        # Sidecar escrito con el nombre anterior del programa, junto a los datos del usuario.
+        p = Path(data_path)
+        antiguo = p.with_name(p.stem + ".analisisr.json")
+        if not antiguo.is_file():
+            return {}
+        f = antiguo
     try:
         datos = json.loads(f.read_text(encoding="utf-8"))
     except (ValueError, OSError):
@@ -746,7 +751,7 @@ def save_metadata(data_path: Path, classes: dict[str, str]) -> Path:
     previo = load_metadata(data_path)
     contenido = {k: v for k, v in previo.items() if k != "_error"} if isinstance(previo, dict) else {}
     niveles = {col: normalize_class(valor) for col, valor in (classes or {}).items()}
-    contenido.update(schema="analisisr.metadata/1",
+    contenido.update(schema="analizar.metadata/1",
                      classes={col: nivel for col, nivel in niveles.items() if nivel},
                      saved=_dt.datetime.now().isoformat(timespec="seconds"),
                      data_file=Path(data_path).name)
@@ -972,7 +977,7 @@ class Backend:
                                "Selecciona otro modelo o configura el servidor para desactivarlo.")
     # -- credenciales -----------------------------------------------------
     def resolved_key(self) -> str | None:
-        """Clave en este orden: explicita > variable del proveedor > ANALISISR_API_KEY.
+        """Clave en este orden: explicita > variable del proveedor > ANALIZAR_API_KEY.
 
         La GUI pasa la clave ya descifrada por entorno, no por argumentos de línea de
         órdenes: así no queda en la lista de procesos ni en el historial.
@@ -980,7 +985,8 @@ class Backend:
         if self.api_key:
             return self.api_key
         dflt = provider_defaults(self.kind)
-        for var in (dflt.get("key_env"), "ANALISISR_API_KEY"):
+        # ANALISISR_API_KEY es el nombre anterior del programa: se sigue leyendo.
+        for var in (dflt.get("key_env"), "ANALIZAR_API_KEY", "ANALISISR_API_KEY"):
             if var and os.environ.get(var):
                 return os.environ[var]
         return None
@@ -1093,7 +1099,7 @@ class Backend:
             429: "límite de peticiones alcanzado; espera unos segundos y reintenta.",
         }.get(e.status, "error del proveedor.")
         if self.rb == 0 and e.status == 400 and any(word in e.body.lower() for word in ("reasoning", "thinking")):
-            pista = "el modelo o endpoint no admite desactivar el razonamiento. Selecciona un modelo compatible; AnalisisR no lo activará como alternativa."
+            pista = "el modelo o endpoint no admite desactivar el razonamiento. Selecciona un modelo compatible; AnalizaR Desktop no lo activará como alternativa."
         return (f"ERROR de {etiqueta} ({e.status}): {pista}\n"
                 f"  endpoint: {e.url}\n  modelo: {self.model}\n"
                 f"  respuesta: {e.body[:300] or 'sin cuerpo'}\n"
@@ -1577,7 +1583,7 @@ def chat_r_help(rs: str | None, topicos: list[str], temp_dir: Path | None = None
         return ""
     faltan = [t for t in limpios if (rs, t) not in CHAT_HELP_CACHE]
     if faltan:
-        carpeta = Path(tempfile.mkdtemp(prefix="analisisr_chat_help_", dir=temp_dir))
+        carpeta = Path(tempfile.mkdtemp(prefix="analizar_chat_help_", dir=temp_dir))
         try:
             script = carpeta / "ayuda.R"
             script.write_text(CHAT_HELP_R, encoding="utf-8")
@@ -1746,7 +1752,7 @@ def chat_run_r(code: str, prof: dict, rs: str | None, keep: list[str] | None = N
     motivo = chat_r_guard(code)
     if motivo:
         return False, motivo
-    carpeta = Path(tempfile.mkdtemp(prefix="analisisr_chat_r_", dir=temp_dir))
+    carpeta = Path(tempfile.mkdtemp(prefix="analizar_chat_r_", dir=temp_dir))
     try:
         candidate = carpeta / "codigo.R"
         candidate.write_text(code.strip() + "\n", encoding="utf-8")

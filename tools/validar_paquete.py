@@ -17,7 +17,7 @@ from PyInstaller.archive.readers import CArchiveReader
 def verify(bundle: Path) -> dict:
     bundle = bundle.resolve()
     info = json.loads((bundle / "build-info.json").read_text(encoding="utf-8"))
-    assert info["application"] == "AnalisisR" and info["format"] == "onedir"
+    assert info["application"] == "AnalizaR Desktop" and info["format"] == "onedir"
     project = Path(__file__).resolve().parents[1]
     for name, digest in info["source_hashes"].items():
         assert hashlib.sha256((project / name).read_bytes()).hexdigest() == digest, f"Fuente modificada: {name}"
@@ -47,7 +47,7 @@ def verify(bundle: Path) -> dict:
                    APPDATA=str(qa / "config"), TEMP=str(qa), TMP=str(qa), TMPDIR=str(qa),
                    USERPROFILE=str(qa / "usuario"), HOME=str(qa / "usuario"), LOCALAPPDATA=str(qa / "local"),
                    QT_QPA_PLATFORM="offscreen", PYTHONDONTWRITEBYTECODE="1")
-        worker = bundle / "AnalisisRWorker.exe"
+        worker = bundle / "AnalizaRWorker.exe"
 
         def operation(name, request, executable=worker):
             folder = qa / name
@@ -61,7 +61,7 @@ def verify(bundle: Path) -> dict:
             assert result.returncode == 0 and "error" not in response, response or result.stderr or result.stdout
             return response
 
-        ui = operation("interfaz", {"action": "selftest"}, bundle / "AnalisisR.exe")
+        ui = operation("interfaz", {"action": "selftest"}, bundle / "AnalizaR.exe")
         assert ui["frozen"] and ui["tabs"] == 4 and ui["templates"] == 28 and ui["guide"] and ui["icon"]
         # El paquete no lleva R: el trabajador debe encontrar el del sistema sin PATH ni R_HOME.
         assert ui["r_ready"] and ui["rscript"]

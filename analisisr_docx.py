@@ -7,7 +7,7 @@ Un .docx es un ZIP con partes OOXML. Escribirlas directamente evita añadir
 se prefirió DPAPI a `cryptography`). `python-docx` se usa **sólo en los tests**,
 para comprobar con un lector independiente que el archivo es válido.
 
-Cubre el subconjunto de Markdown que producen los informes de AnalisisR:
+Cubre el subconjunto de Markdown que producen los informes de AnalizaR Desktop:
 títulos, párrafos, negrita/cursiva/código, listas, citas, líneas y tablas.
 """
 
@@ -49,7 +49,7 @@ RELS_DOC = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
 APP_PROPS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
-<Application>AnalisisR</Application>
+<Application>AnalizaR Desktop</Application>
 </Properties>"""
 
 # Estilos: cuerpo Calibri 11, títulos en azul corporativo, cita y código.
@@ -401,8 +401,8 @@ def _core_props(titulo: str) -> str:
  xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"
  xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <dc:title>{escape(titulo)}</dc:title>
-<dc:creator>AnalisisR</dc:creator>
-<cp:lastModifiedBy>AnalisisR</cp:lastModifiedBy>
+<dc:creator>AnalizaR Desktop</dc:creator>
+<cp:lastModifiedBy>AnalizaR Desktop</cp:lastModifiedBy>
 <dcterms:created xsi:type="dcterms:W3CDTF">{ahora}</dcterms:created>
 <dcterms:modified xsi:type="dcterms:W3CDTF">{ahora}</dcterms:modified>
 </cp:coreProperties>"""

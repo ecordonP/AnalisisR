@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**AnalisisR** — a standalone PySide6 (Qt) desktop app: import a dataset, talk to an AI
+**AnalizaR Desktop** — a standalone PySide6 (Qt) desktop app: import a dataset, talk to an AI
 endpoint in natural language, and let it run the statistics locally through `Rscript`.
 All user-facing text is in Spanish.
 
@@ -47,7 +47,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\compilar.ps1              
 powershell -NoProfile -ExecutionPolicy Bypass -File .\compilar.ps1 -Desplegar   # ...and install
 ```
 
-`compilar.ps1` chains `pyinstaller AnalisisR_onedir.spec` → `tools/validar_paquete.py dist/AnalisisR`
+`compilar.ps1` chains `pyinstaller AnalisisR_onedir.spec` → `tools/validar_paquete.py dist/AnalizaR`
 → `desplegar.ps1`; a failed validation blocks deployment. `build/`, `dist/`, `temporales/`
 and `build_*.log` are generated — never edit them.
 
@@ -56,7 +56,7 @@ and `build_*.log` are generated — never edit them.
 **GUI/worker split.** Everything slow or risky runs in a separate process, so the UI stays
 cancellable. `main()` dispatches on `--worker <request.json>`; the GUI writes
 `request.json` into `self.folder / "operacion_NNN"`, spawns itself via `ui.Proc`
-(`sys.executable AnalisisR.py --worker ...`, or `AnalisisRWorker.exe` when frozen) and
+(`sys.executable AnalisisR.py --worker ...`, or `AnalizaRWorker.exe` when frozen) and
 reads `result.json` back. `worker()` handles the actions `profile`, `probe`, `chat`,
 `diagnose` and `selftest`, always writes `result.json` (errors become `{"error": ...}`)
 and always writes a `manifest.json` of SHA-256 hashes in its `finally`. Adding a feature

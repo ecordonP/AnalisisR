@@ -5,7 +5,7 @@ Ofusca los seis módulos con PyArmor y genera una carpeta con interfaz,
 trabajador, Qt y recursos. Falla si no puede ofuscar: nunca sustituye la
 compilación protegida por código sin protección.
 
-No se incluye R: AnalisisR usa la instalación de R del equipo donde se ejecuta,
+No se incluye R: AnalizaR Desktop usa la instalación de R del equipo donde se ejecuta,
 y sin ella la aplicación solo abre la pestaña Entorno R para avisar.
 """
 import hashlib
@@ -63,25 +63,25 @@ a.binaries.append((f"{runtime_name}/pyarmor_runtime.pyd", str(runtimes[0]), "EXT
 
 pyz = PYZ(a.pure)
 common = dict(exclude_binaries=True, debug=False, strip=False, upx=False,
-              icon=str(ROOT / "assets" / "analisisr.ico"))
-gui = EXE(pyz, a.scripts, [], name="AnalisisR", console=False, **common)
-worker = EXE(pyz, a.scripts, [], name="AnalisisRWorker", console=True, **common)
-coll = COLLECT(gui, worker, a.binaries, a.datas, strip=False, upx=False, name="AnalisisR")
+              icon=str(ROOT / "assets" / "analizar.ico"))
+gui = EXE(pyz, a.scripts, [], name="AnalizaR", console=False, **common)
+worker = EXE(pyz, a.scripts, [], name="AnalizaRWorker", console=True, **common)
+coll = COLLECT(gui, worker, a.binaries, a.datas, strip=False, upx=False, name="AnalizaR")
 
 destination = Path(coll.name).resolve()
 
 manifest = {
-    "application": "AnalisisR", "format": "onedir", "protected": sorted(protected),
+    "application": "AnalizaR Desktop", "format": "onedir", "protected": sorted(protected),
     "source_hashes": source_hashes,
     "pyarmor_runtime": runtime_name, "python": sys.version.split()[0],
     "bundled_r": False,
     "executables": {name: hashlib.sha256((destination / name).read_bytes()).hexdigest()
-                    for name in ("AnalisisR.exe", "AnalisisRWorker.exe")},
+                    for name in ("AnalizaR.exe", "AnalizaRWorker.exe")},
 }
 (destination / "build-info.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 (destination / "LEEME.txt").write_text(
-    "AnalisisR\nDesarrollado por Eulogio Cordón 2026.\n\n"
-    "Ejecuta AnalisisR.exe. Conserva toda esta carpeta: _internal es necesario.\n"
+    "AnalizaR Desktop\nDesarrollado por Eulogio Cordón 2026.\n\n"
+    "Ejecuta AnalizaR.exe. Conserva toda esta carpeta: _internal es necesario.\n"
     "Incluye Python y Qt, y no necesita Python instalado. R NO va incluido: instala R 4.x\n"
     "y los paquetes que indica la pestaña Entorno R, donde también puedes señalar su carpeta.\n"
     "Sin R la aplicación abre, avisa y no permite ningún análisis.\n"

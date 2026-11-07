@@ -1,11 +1,11 @@
-# AnalisisR 1.0
+# AnalizaR Desktop 1.0
 
 Aplicación de escritorio independiente para preparar datos, conversar con un
 endpoint de IA y ejecutar análisis locales con R. Es autónoma: los módulos de datos,
 conexiones, cifrado y procesos viven en este directorio y no dependen de ningún otro
 proyecto.
 
-**Requiere R instalado.** AnalisisR no incluye R ni lo empaqueta: todos los
+**Requiere R instalado.** AnalizaR Desktop no incluye R ni lo empaqueta: todos los
 procedimientos estadísticos se calculan en R y no hay alternativa en Python. Sin R
 la aplicación abre únicamente la pestaña **Entorno R**, avisa de la instalación
 necesaria y no permite ninguna operación.
@@ -17,7 +17,7 @@ necesaria y no permite ninguna operación.
 - Importa CSV, TXT y TSV con Python, y Excel, SPSS, Stata y SAS a través de R
   (`readxl`, `haven`), conservando etiquetas de variable y de valor.
 - Niveles de medida revisables por variable (identificador, binaria, nominal, ordinal,
-  continua, texto). Los que declares se guardan en un archivo `.analisisr.json` junto a tus
+  continua, texto). Los que declares se guardan en un archivo `.analizar.json` junto a tus
   datos y se recuperan al volver a importarlos.
 - Recodificación por reglas legibles, fusión de categorías ordinales poco frecuentes y
   selección de variables. Todo se aplica **sobre una copia**: el archivo original nunca se
@@ -94,7 +94,7 @@ python AnalisisR.py
 Mantén juntos `AnalisisR.py`, `analisisr_core.py`, `analisisr_ui.py`,
 `analisisr_secrets.py`, `analisisr_session.py` y `analisisr_docx.py`, junto con
 la carpeta `assets/`. No hace falta configurar
-`PYTHONPATH`. Abre la guía local desde **Ayuda → Guía de AnalisisR** o con **F1**;
+`PYTHONPATH`. Abre la guía local desde **Ayuda → Guía de AnalizaR Desktop** o con **F1**;
 también puedes abrir directamente [assets/guia.html](assets/guia.html).
 
 La primera pestaña, **Entorno R**, muestra el estado del entorno: ruta de `Rscript`,
@@ -133,17 +133,17 @@ y [Gemini](https://cloud.google.com/vertex-ai/generative-ai/docs/thinking).
 
 Las claves se guardan mediante el gestor de credenciales disponible o DPAPI
 en Windows. En otros sistemas, sin gestor de credenciales, se usa Fernet y
-la variable `ANALISISR_MASTER_KEY`.
+la variable `ANALIZAR_MASTER_KEY`.
 
-Los perfiles y bloqueos tienen almacenamiento propio: `%APPDATA%/AnalisisR`
-en Windows, `~/Library/Application Support/AnalisisR` en macOS y
-`$XDG_CONFIG_HOME/AnalisisR` (o `~/.config/AnalisisR`) en Linux.
+Los perfiles y bloqueos tienen almacenamiento propio: `%APPDATA%/AnalizaR Desktop`
+en Windows, `~/Library/Application Support/AnalizaR Desktop` en macOS y
+`$XDG_CONFIG_HOME/AnalizaR Desktop` (o `~/.config/AnalizaR Desktop`) en Linux.
 No se leen ni migran perfiles de otras aplicaciones: configura tus endpoints en
-AnalisisR. También se aceptan las variables de clave del proveedor
-o `ANALISISR_API_KEY`.
+AnalizaR Desktop. También se aceptan las variables de clave del proveedor
+o `ANALIZAR_API_KEY`.
 
 Al aplicar el tratamiento, los niveles de medida declarados se guardan en un archivo
-`<datos>.analisisr.json` junto al archivo de datos y se recuperan automáticamente al
+`<datos>.analizar.json` junto al archivo de datos y se recuperan automáticamente al
 volver a importarlo, de modo que solo hay que redefinir los tipos una vez. Las variables
 marcadas como binarias se recodifican a 0 y 1 en la copia de trabajo, tomando su primera
 categoría como 0 y referencia, con las etiquetas de valor reasignadas a los códigos nuevos
@@ -154,7 +154,7 @@ efecto de la variable completa se contrasta con sus k-1 indicadoras a la vez.
 
 Las transformaciones se aplican a copias en la carpeta temporal de sesión.
 Todos los temporales se crean dentro de la carpeta del programa, en
-`temporales/` (por defecto `C:\AnalisisR\temporales` en la versión instalada).
+`temporales/` (por defecto `C:\AnalizaR\temporales` en la versión instalada).
 Los procesos R heredan esa ubicación. La carpeta de instalación debe permitir
 escritura para poder ejecutar los análisis.
 Al finalizar cada operación se conservan los archivos de sesión en memoria y
@@ -256,8 +256,8 @@ los permisos del usuario; el filtro de operaciones no es un aislamiento de segur
   Se conserva el código literalmente. Las estructuras LaTeX no compatibles se
   mantienen para evitar alterar el significado; no se requiere instalar un motor TeX.
 
-El logotipo y los iconos están en `assets/analisisr-logo.png`,
-`assets/analisisr-icon.png` y `assets/analisisr.ico`.
+El logotipo y los iconos están en `assets/analizar-logo.png`,
+`assets/analizar-icon.png` y `assets/analizar.ico`.
 
 ## Desarrollo y pruebas
 
@@ -302,7 +302,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\compilar.ps1 -Desplegar
 ```
 
 `AnalisisR_onedir.spec` ejecuta PyArmor sobre los seis módulos y genera
-`dist/AnalisisR/`: `AnalisisR.exe`, `AnalisisRWorker.exe` y `_internal/` con
+`dist/AnalizaR/`: `AnalizaR.exe`, `AnalizaRWorker.exe` y `_internal/` con
 Python/Qt/recursos. **Nunca se incluye R portable**: el paquete ocupa unos 120 MB y
 usa el R del equipo donde se ejecuta. Se comprueba que todos los módulos propios se
 empaquetan ofuscados; si falla PyArmor se detiene la compilación. No se incluyen
@@ -316,7 +316,7 @@ Comprueba además que el paquete no contiene R y que la detección encuentra el 
 sistema sin `R_HOME` ni `PATH`, por lo que debe ejecutarse en un equipo con R.
 `desplegar.ps1` instala solo un paquete validado; prepara la copia antes de
 sustituir el destino y conserva la instalación anterior como respaldo. Cierra
-la aplicación antes de actualizar. El destino predeterminado es `C:\AnalisisR`.
+la aplicación antes de actualizar. El destino predeterminado es `C:\AnalizaR`.
 
 Las sesiones guardadas en otra unidad usan un nombre nuevo para conservar
 cualquier archivo anterior sin crear temporales fuera de la instalación.

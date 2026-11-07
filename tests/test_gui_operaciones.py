@@ -250,7 +250,7 @@ def test_guardar_y_abrir_sesion_conserva_pendientes_y_excluye_claves(window, mon
     window.run_r.setChecked(True)
     window.share.setChecked(share)
     window.question.setPlainText("Borrador pendiente")
-    archive = base / "saved.analisisr"
+    archive = base / "saved.analizar"
     monkeypatch.setattr(ui.QFileDialog, "getSaveFileName", lambda *a: (str(archive), ""))
     window.save_session()
     assert archive.is_file()
@@ -630,7 +630,7 @@ def test_importacion_analisis_sucesivos_word_y_sesion_con_temporales_limpios(win
     monkeypatch.setattr(ui.QFileDialog, "getSaveFileName", lambda *a: (str(report), ""))
     window.export_word()
     assert report.is_file() and not window.folder.exists()
-    archive = base / "resultados.analisisr"
+    archive = base / "resultados.analizar"
     monkeypatch.setattr(ui.QFileDialog, "getSaveFileName", lambda *a: (str(archive), ""))
     window.save_session()
     assert archive.is_file() and not window.folder.exists()
@@ -650,7 +650,7 @@ def test_cancelacion_limpia_disco_y_conserva_el_diagnostico(window, monkeypatch)
     warnings = []
     monkeypatch.setattr(ui.QMessageBox, "warning", lambda *a: warnings.append(a[-1]))
     window.start("chat", window.endpoint(), lambda _: pytest.fail("No debe aceptar un cálculo cancelado"))
-    auxiliary = window.folder / "operacion_001" / "analisisr_chat_r_interrumpido"
+    auxiliary = window.folder / "operacion_001" / "analizar_chat_r_interrumpido"
     auxiliary.mkdir()
     (auxiliary / "chat.R").write_text("código interrumpido", encoding="utf-8")
     window.proc.done.emit(-1)
@@ -678,11 +678,11 @@ def test_version_compilada_lanza_el_trabajador_ejecutable(window, monkeypatch):
 
     calls = []
     monkeypatch.setattr(sys, "frozen", True, raising=False)
-    monkeypatch.setattr(sys, "executable", str(window.folder.parent / "AnalisisR.exe"))
+    monkeypatch.setattr(sys, "executable", str(window.folder.parent / "AnalizaR.exe"))
     monkeypatch.setattr(ui.Proc, "start", lambda self, *args: calls.append(args))
     window.start("diagnose", {}, lambda _: None)
     program, args, *_ = calls[0]
-    assert Path(program).name == "AnalisisRWorker.exe"
+    assert Path(program).name == "AnalizaRWorker.exe"
     assert args[0] == "--worker" and len(args) == 2
 
 

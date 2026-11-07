@@ -70,8 +70,11 @@ def test_perfiles_y_bloqueos_son_propios(tmp_path: Path, monkeypatch: pytest.Mon
     for name in ("APPDATA", "XDG_CONFIG_HOME"):
         monkeypatch.setenv(name, str(tmp_path))
     monkeypatch.setattr(app.secrets.os.path, "expanduser", lambda path: str(tmp_path))
-    assert app.secrets.APP_DIR_NAME == "AnalisisR"
+    assert app.secrets.APP_DIR_NAME == "AnalizaR Desktop"
+    # El servicio del keyring conserva el nombre anterior: ahí está la clave maestra que
+    # descifra los perfiles ya guardados, y renombrarlo los volvería ilegibles.
     assert app.secrets.KEYRING_SERVICE == "AnalisisR"
+    assert app.secrets.LEGACY_APP_DIR_NAME == "AnalisisR"
     foreign = tmp_path / "OtraAplicacion" / "backends.json"
     foreign.parent.mkdir()
     foreign.write_text('{"profiles":{"local":{"model":"foreign"}}}', encoding="utf-8")
@@ -91,10 +94,10 @@ def test_perfiles_y_bloqueos_son_propios(tmp_path: Path, monkeypatch: pytest.Mon
 def test_variable_api_propia(monkeypatch: pytest.MonkeyPatch) -> None:
     backend = app.engine.Backend("openai", "", "example", 100, 0, 0.2, 10)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.delenv("ANALISISR_API_KEY", raising=False)
+    monkeypatch.delenv("ANALIZAR_API_KEY", raising=False)
     monkeypatch.setenv("OTRA_APP_API_KEY", "foreign")
     assert backend.resolved_key() is None
-    monkeypatch.setenv("ANALISISR_API_KEY", "own")
+    monkeypatch.setenv("ANALIZAR_API_KEY", "own")
     assert backend.resolved_key() == "own"
 
 
@@ -102,7 +105,7 @@ def test_gemini_respeta_clave_propia_y_endpoint(monkeypatch: pytest.MonkeyPatch)
     backend = app.engine.Backend("gemini", "https://example.invalid", "example", 100, 0, 0.2, 10)
     for name in ("GEMINI_API_KEY", "GOOGLE_API_KEY"):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("ANALISISR_API_KEY", "test-key")
+    monkeypatch.setenv("ANALIZAR_API_KEY", "test-key")
     seen = []
 
     class Response:
@@ -129,7 +132,7 @@ def test_cifrado_real_no_guarda_clave_en_claro(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str,
 ) -> None:
     monkeypatch.setattr(app.secrets, "keyring_disponible", lambda: (False, "test"))
-    monkeypatch.setenv("ANALISISR_MASTER_KEY", "test-only-master-key")
+    monkeypatch.setenv("ANALIZAR_MASTER_KEY", "test-only-master-key")
     if platform == "win32":
         if not sys.platform.startswith("win"):
             pytest.skip("DPAPI requiere Windows")

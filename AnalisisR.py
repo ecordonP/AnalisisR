@@ -1,4 +1,4 @@
-"""AnalisisR: datos, endpoints y procedimientos estadísticos conversacionales con R.
+"""AnalizaR Desktop: datos, endpoints y procedimientos estadísticos conversacionales con R.
 
 Ejecutar: C:/Users/Eulogio/anaconda3/python.exe AnalisisR.py
 Aplicación independiente con módulos propios situados junto a este archivo.
@@ -1161,7 +1161,7 @@ TEMPLATES = {name: prompt + (
     "interpretativo que se construya a partir de los resultados calculados; no afirmes haber visto una "
     "salida que no recibiste. No inventes relevancia clínica o práctica sin un umbral definido por el usuario."
 ) for name, prompt in sorted(TEMPLATES.items(), key=lambda item: unicodedata.normalize("NFKD", item[0]).casefold())}
-SYSTEM = """Eres el asistente estadístico de AnalisisR. Responde en español y Markdown.
+SYSTEM = """Eres el asistente estadístico de AnalizaR Desktop. Responde en español y Markdown.
 Escribe las fórmulas estadísticas con símbolos Unicode legibles (μ, σ, ≠, ≤, H₀, R²),
 sin delimitadores de matemáticas ni comandos LaTeX; conserva literalmente el código R.
 Presenta resultados, descriptivos y comparaciones en tablas Markdown con encabezados
@@ -1494,7 +1494,7 @@ def worker(request_path: Path) -> int:
         return 1
     finally:
         write_json(folder / "manifest.json", {
-            "schema": "analisisr.operation/1",
+            "schema": "analizar.operation/1",
             "artifacts": {path.name: {"sha256": engine.sha256_file(path)}
                           for path in sorted(folder.iterdir())
                           if path.is_file() and path.name != "manifest.json"},
@@ -1507,8 +1507,8 @@ def create_window():
     class Window(ui.QMainWindow):
         def __init__(self):
             super().__init__()
-            self.setWindowTitle("AnalisisR — Estadística con lenguaje natural")
-            self.setWindowIcon(ui.QIcon(str(ROOT / "assets" / "analisisr.ico")))
+            self.setWindowTitle("AnalizaR Desktop — Estadística con lenguaje natural")
+            self.setWindowIcon(ui.QIcon(str(ROOT / "assets" / "analizar.ico")))
             self.resize(1200, 850)
             self.workspace = SessionWorkspace()
             self.folder = self.workspace.folder
@@ -1538,7 +1538,7 @@ def create_window():
                 action.setShortcut(ui.QKeySequence(shortcut))
                 action.triggered.connect(handler)
                 self.session_actions.append(action)
-            help_action = ui.QAction("Guía de AnalisisR", self)
+            help_action = ui.QAction("Guía de AnalizaR Desktop", self)
             help_action.setObjectName("help_guide")
             help_action.setShortcut(ui.QKeySequence("F1"))
             help_action.triggered.connect(self.open_help)
@@ -1547,7 +1547,7 @@ def create_window():
             self.diagnose_action = help_menu.addAction("Diagnóstico de R y paquetes")
             self.diagnose_action.triggered.connect(lambda: self.start("diagnose", {}, self.show_diagnosis))
             about_menu = self.menuBar().addMenu("Acerca de")
-            about_action = about_menu.addAction("Acerca de AnalisisR…", self.show_about)
+            about_action = about_menu.addAction("Acerca de AnalizaR Desktop…", self.show_about)
             about_action.setObjectName("about_app")
             self.load_endpoint()
             self.statusBar().showMessage(f"Sesión local: {self.folder}")
@@ -1625,7 +1625,7 @@ def create_window():
                 return
             required = [name for name in engine.DIAGNOSTIC_PACKAGES if name != "stats"]
             self.r_state.setText(
-                "No se ha detectado R, y AnalisisR no puede funcionar sin él: todos los "
+                "No se ha detectado R, y AnalizaR Desktop no puede funcionar sin él: todos los "
                 "procedimientos estadísticos se calculan en R y no hay alternativa en Python.\n\n"
                 "Instala R 4.x desde https://cran.r-project.org y, dentro de R, los paquetes "
                 "que figuran abajo. Si ya lo tienes en una ruta poco habitual, indícala aquí "
@@ -1635,7 +1635,7 @@ def create_window():
                 for col, text in enumerate((name, "R no detectado", "—")):
                     self.r_packages.setItem(row, col, ui.QTableWidgetItem(text))
             self.r_install.setPlainText(
-                "Paquetes requeridos. En una consola de R, fuera de AnalisisR:\n"
+                "Paquetes requeridos. En una consola de R, fuera de AnalizaR Desktop:\n"
                 "install.packages(c(" + ", ".join(json.dumps(name) for name in required) + "))")
             self.statusBar().showMessage("Sin R: instala R y sus paquetes para poder trabajar.")
 
@@ -1718,7 +1718,7 @@ def create_window():
             self.probe_result.setMinimumHeight(140)
             self.probe_result.setMaximumHeight(220)
             form.addRow("Resultado", self.probe_result)
-            note = ui.QLabel("Los perfiles cifrados son propios de AnalisisR. Selecciona un modelo "
+            note = ui.QLabel("Los perfiles cifrados son propios de AnalizaR Desktop. Selecciona un modelo "
                             "que permita desactivar el razonamiento. Cambiar de endpoint limpia la conversación.")
             note.setWordWrap(True)
             form.addRow(note)
@@ -1757,7 +1757,7 @@ def create_window():
             self.run_r = ui.QCheckBox("Ejecutar el R generado en este equipo")
             self.run_r.setChecked(True)
             self.run_r.setToolTip("El código generado se ejecuta con tus permisos. El filtro de "
-                                 "operaciones de AnalisisR no es un aislamiento de seguridad.")
+                                 "operaciones de AnalizaR Desktop no es un aislamiento de seguridad.")
             self.show_code = ui.QCheckBox("Mostrar código R")
             self.show_code.setToolTip("Añade al final de la respuesta el último script R ejecutado.")
             self.share = ui.QCheckBox("Permitir enviar la salida R al endpoint para interpretarla (puede contener datos)")
@@ -1990,8 +1990,8 @@ def create_window():
         def save_session(self):
             if self.proc:
                 return
-            name, _ = ui.QFileDialog.getSaveFileName(self, "Guardar sesión", "sesion.analisisr",
-                                                    "Sesión AnalisisR (*.analisisr)")
+            name, _ = ui.QFileDialog.getSaveFileName(self, "Guardar sesión", "sesion.analizar",
+                                                    "Sesión AnalizaR Desktop (*.analizar)")
             if not name:
                 return
             try:
@@ -2009,7 +2009,7 @@ def create_window():
                          "endpoint": self.endpoint(), "question": self.question.toPlainText(),
                          "show_code": self.show_code.isChecked(),
                          "job": self.job}
-                path = Path(name).with_suffix(".analisisr")
+                path = Path(name).with_suffix(".analizar")
                 self.workspace.restore()
                 sessions.save_session(path, self.folder, state)
                 self.statusBar().showMessage(f"Sesión guardada: {path}")
@@ -2021,7 +2021,9 @@ def create_window():
         def open_session(self):
             if self.proc:
                 return
-            name, _ = ui.QFileDialog.getOpenFileName(self, "Abrir sesión", "", "Sesión AnalisisR (*.analisisr)")
+            # .analisisr es la extensión del nombre anterior: se sigue abriendo.
+            name, _ = ui.QFileDialog.getOpenFileName(self, "Abrir sesión", "",
+                                                     "Sesión AnalizaR Desktop (*.analizar *.analisisr)")
             if not name:
                 return
             if (self.history or self.profile or self.question.toPlainText().strip()) and ui.QMessageBox.question(
@@ -2061,7 +2063,7 @@ def create_window():
                 self.history = state.get("history", [])
                 self.chat.clear()
                 for turn in self.history:
-                    ui.render_chat(self.chat, "Tú" if turn["role"] == "user" else "AnalisisR", turn["content"])
+                    ui.render_chat(self.chat, "Tú" if turn["role"] == "user" else "AnalizaR Desktop", turn["content"])
                 self.question.setPlainText(state.get("question", ""))
                 self.show_code.setChecked(state.get("show_code", False))
                 self.statusBar().showMessage("Sesión abierta. Se mantienen el endpoint y las opciones de ejecutar R y enviar su salida.")
@@ -2079,7 +2081,7 @@ def create_window():
             if not self.history:
                 ui.QMessageBox.information(self, "Exportar a Word", "Aún no hay resultados para exportar.")
                 return
-            name, _ = ui.QFileDialog.getSaveFileName(self, "Exportar informe a Word", "AnalisisR.docx",
+            name, _ = ui.QFileDialog.getSaveFileName(self, "Exportar informe a Word", "AnalizaR.docx",
                                                     "Documento Word (*.docx)")
             if not name:
                 return
@@ -2099,7 +2101,7 @@ def create_window():
                 if destination.resolve().is_relative_to(self.folder):
                     raise ValueError("Guarda el informe fuera de la carpeta temporal de trabajo.")
                 path = markdown_to_docx("\n\n".join(parts), destination,
-                                        titulo="Informe de AnalisisR", pie="Resultados sin auditoría estadística automática.")
+                                        titulo="Informe de AnalizaR Desktop", pie="Resultados sin auditoría estadística automática.")
                 self.statusBar().showMessage(f"Informe Word guardado: {path}")
             except Exception as exc:
                 ui.QMessageBox.warning(self, "Exportar a Word", str(exc))
@@ -2127,13 +2129,13 @@ def create_window():
                                             item["version"] if item["installed"] else "—")):
                     self.r_packages.setItem(row, col, ui.QTableWidgetItem(text))
             self.r_install.setPlainText(
-                "Faltan bibliotecas requeridas. En una consola de R, fuera de AnalisisR:\n"
+                "Faltan bibliotecas requeridas. En una consola de R, fuera de AnalizaR Desktop:\n"
                 "install.packages(c(" + ", ".join(json.dumps(name) for name in absent) + "))"
                 if absent else "Todas las bibliotecas comprobadas están instaladas.")
 
         def show_about(self):
-            ui.QMessageBox.about(self, "Acerca de AnalisisR",
-                                f"<h3>AnalisisR {VERSION}</h3>"
+            ui.QMessageBox.about(self, "Acerca de AnalizaR Desktop",
+                                f"<h3>AnalizaR Desktop {VERSION}</h3>"
                                 "<p>Desarrollado por Eulogio Cordón 2026.</p>")
 
         def open_help(self):
@@ -2328,7 +2330,7 @@ def create_window():
                                   "context": result.get("context_answer", result["answer"])}])
             self.chat.clear()
             for turn in self.history:
-                ui.render_chat(self.chat, "Tú" if turn["role"] == "user" else "AnalisisR",
+                ui.render_chat(self.chat, "Tú" if turn["role"] == "user" else "AnalizaR Desktop",
                                           turn["content"])
             self.question.clear()
             for script in result.get("scripts", []):
@@ -2372,7 +2374,7 @@ def create_window():
                     token = secrets.load().get(request["backend"], {}).get("api_key", "")
                     key = self.key.text() or (secrets.decrypt(token) if token else "")
                     if key:
-                        env["ANALISISR_API_KEY"] = key
+                        env["ANALIZAR_API_KEY"] = key
                         provider_env = engine.provider_defaults(request["backend"]).get("key_env")
                         if provider_env:
                             env[provider_env] = key
@@ -2394,7 +2396,7 @@ def create_window():
                     item.setEnabled(False)
                 self.statusBar().showMessage("Operación en curso…")
                 if getattr(sys, "frozen", False):
-                    worker_name = "AnalisisRWorker.exe" if sys.platform.startswith("win") else "AnalisisRWorker"
+                    worker_name = "AnalizaRWorker.exe" if sys.platform.startswith("win") else "AnalizaRWorker"
                     program = str(Path(sys.executable).with_name(worker_name))
                     args = ["--worker", str(folder / "request.json")]
                 else:
@@ -2493,8 +2495,8 @@ def main() -> int:
     import analisisr_ui as ui
 
     app = ui.QApplication(sys.argv)
-    app.setApplicationName("AnalisisR")
-    app.setWindowIcon(ui.QIcon(str(ROOT / "assets" / "analisisr.ico")))
+    app.setApplicationName("AnalizaR Desktop")
+    app.setWindowIcon(ui.QIcon(str(ROOT / "assets" / "analizar.ico")))
     app.setStyle("Fusion")
     app.setStyleSheet(ui.QSS)
     window = create_window()

@@ -1,4 +1,4 @@
-"""Datos copiados, consentimiento de salida R y ventana de AnalisisR."""
+"""Datos copiados, consentimiento de salida R y ventana de AnalizaR Desktop."""
 import json
 import os
 from pathlib import Path
@@ -31,8 +31,8 @@ def test_preparacion_recodifica_copia_y_limita_columnas(data):
     assert profile["recoding"][0]["n_changed"] == 2
     # Junto al archivo del usuario solo puede aparecer el sidecar de tipos que él declara.
     vecinos = {f.name for f in source.parent.iterdir() if f.is_file()}
-    assert vecinos == {source.name, "origen.analisisr.json"}
-    assert json.loads((source.parent / "origen.analisisr.json").read_text(encoding="utf-8"))["classes"] == {
+    assert vecinos == {source.name, "origen.analizar.json"}
+    assert json.loads((source.parent / "origen.analizar.json").read_text(encoding="utf-8"))["classes"] == {
         "x": "ordinal", "y": "ordinal"}
 
 

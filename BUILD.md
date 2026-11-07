@@ -1,6 +1,6 @@
-# Compilar AnalisisR
+# Compilar AnalizaR Desktop
 
-AnalisisR se ejecuta tal cual con `python AnalisisR.py`; compilarlo solo sirve para
+AnalizaR Desktop se ejecuta tal cual con `python AnalisisR.py`; compilarlo solo sirve para
 distribuirlo a equipos sin Python. **Ninguna compilación incluye R**: el equipo de destino
 necesita R 4.x con los paquetes que indica la pestaña *Entorno R*.
 
@@ -24,7 +24,7 @@ python -m pytest -q
 python -m PyInstaller --noconfirm AnalisisR_multiplataforma.spec
 ```
 
-Resultado en `dist/AnalisisR/`: el ejecutable `AnalisisR` (interfaz), `AnalisisRWorker`
+Resultado en `dist/AnalizaR/`: el ejecutable `AnalizaR` (interfaz), `AnalizaRWorker`
 (procesos de datos, IA y R) y `_internal/` con Python, Qt y los recursos. En Windows ambos
 llevan extensión `.exe`.
 
@@ -52,10 +52,10 @@ El trabajador acepta peticiones JSON, lo que permite verificar la compilación s
 interfaz gráfica:
 
 ```bash
-mkdir -p dist/AnalisisR/temporales/v
-printf '{"action":"selftest"}' > dist/AnalisisR/temporales/v/request.json
-./dist/AnalisisR/AnalisisR --worker dist/AnalisisR/temporales/v/request.json
-cat dist/AnalisisR/temporales/v/result.json
+mkdir -p dist/AnalizaR/temporales/v
+printf '{"action":"selftest"}' > dist/AnalizaR/temporales/v/request.json
+./dist/AnalizaR/AnalizaR --worker dist/AnalizaR/temporales/v/request.json
+cat dist/AnalizaR/temporales/v/result.json
 ```
 
 Debe devolver `version`, `frozen: true`, `tabs: 4`, `templates: 27`, si se ha detectado R
@@ -64,7 +64,7 @@ y el estado de los paquetes requeridos.
 
 ## R en el equipo de destino
 
-AnalisisR busca `Rscript` en este orden: la variable `R_HOME`, la carpeta indicada en la
+AnalizaR Desktop busca `Rscript` en este orden: la variable `R_HOME`, la carpeta indicada en la
 pestaña *Entorno R*, el `PATH` y las instalaciones habituales del sistema
 (`C:/Program Files/R` en Windows; el framework de CRAN, Homebrew y `/usr/lib/R` en macOS y
 Linux). Sin R, la aplicación abre solo la pestaña *Entorno R* y avisa de lo que falta.
