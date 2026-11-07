@@ -50,6 +50,11 @@ necesaria y no permite ninguna operación.
 - 28 plantillas de consulta que detallan estimandos, supuestos, contrastes,
   diagnósticos, tamaños de efecto e interpretación, y que se rellenan con tus variables
   reales desde un formulario.
+- Cada análisis termina con una sección **Referencias**: manuales de editoriales
+  académicas, libros de R de acceso libre y artículos del método o del paquete usado,
+  más R con la versión que hizo el cálculo. La bibliografía de cada plantilla es una
+  lista cerrada, así que el modelo cita de ella y tiene prohibido inventar obras, años
+  o DOI.
 - La sintaxis del código generado se comprueba localmente antes de ejecutarlo; los errores
   se devuelven para corregirlos, con un máximo de tres fallos sintácticos consecutivos.
 - Hasta seis bloques de R y tres consultas de ayuda por turno, cada bloque autocontenido y

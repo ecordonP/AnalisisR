@@ -68,11 +68,11 @@ survives a plain `QProcess.kill()`.
 
 | Module | Role |
 | --- | --- |
-| `AnalisisR.py` | prompt templates (`TEMPLATES`, `SYSTEM`), `prepare_data`, `converse`, `worker`, `create_window` (the whole Qt window, defined inside the function; `build_environment` is the Entorno R tab) |
+| `AnalisisR.py` | prompt templates (`TEMPLATES`, `SYSTEM`, `REFERENCIAS`/`CITAS`), `prepare_data`, `converse`, `worker`, `create_window` (the whole Qt window, defined inside the function; `build_environment` is the Entorno R tab) |
 | `analisisr_core.py` | aliased as `engine`: readers, profiling, recoding, `PROVIDERS`/`Backend`, R discovery and execution, `RunLock`, process control |
 | `analisisr_ui.py` | `QSS` stylesheet, `Proc`, `PromptEdit`, Markdown→chat rendering |
 | `analisisr_secrets.py` | per-provider encrypted profiles (`backends.json`) in the OS config dir |
-| `analisisr_session.py` | temp-dir policy, `SessionWorkspace`, portable `.analisisr` save/load |
+| `analisisr_session.py` | temp-dir policy, `SessionWorkspace`, portable `.analizar` save/load (it still opens `.analisisr`) |
 | `analisisr_docx.py` | Word export by writing OOXML by hand — no `python-docx` at runtime |
 
 **R is a subprocess, never a binding.** There is no `rpy2` anywhere: the bridge is
