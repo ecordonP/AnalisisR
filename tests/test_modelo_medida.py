@@ -409,3 +409,22 @@ def test_el_registro_nombra_todos_los_paquetes_consultados(tmp_path, monkeypatch
     for paquete in ("MVN", "lavaan", "semTools"):
         assert paquete in linea, (paquete, linea)
     assert "…" not in linea
+
+
+@pytest.mark.parametrize("name", ["Análisis factorial confirmatorio", "Consistencia interna",
+                                  "Invarianza de medida", "Fiabilidad"])
+def test_la_receta_de_fiabilidad_evita_el_na_inventado(name):
+    """El modelo llegó a declarar omega NA por una supuesta limitación de WLSMV: es falso."""
+    prompt = app.TEMPLATES[name]
+    for pieza in ("om <- unlist(semTools::compRelSEM(ajuste))",
+                  "tau.eq = TRUE, ord.scale = FALSE",
+                  "merge(merge(df_om, df_al, by = 'Factor'), df_ave, by = 'Factor')",
+                  "no es válido para vectores atómicos",
+                  "no escribas que el paquete o el estimador no permiten calcularlos"):
+        assert pieza in prompt, (name, pieza)
+
+
+def test_el_afc_cita_las_fuentes_de_ave_y_htmt():
+    obras = app.REFERENCIAS["Análisis factorial confirmatorio"]
+    assert any("Fornell" in o for o in obras) and any("Henseler" in o for o in obras)
+    assert any("Hair" in o for o in obras)

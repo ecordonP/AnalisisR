@@ -1176,7 +1176,22 @@ SEMTOOLS_CALL = (
     "observada y no el de la escala latente: para el alfa en esa situación añade ord.scale igual "
     "a FALSE, declarando que es el alfa sobre la respuesta latente continua, y deja el omega en "
     "la escala observada con ord.scale igual a TRUE, que es el valor por omisión. Explica esa "
-    "diferencia al presentarlos juntos en lugar de mezclar las dos escalas en una sola columna."
+    "diferencia al presentarlos juntos en lugar de mezclar las dos escalas en una sola columna. "
+    "Esta es la forma correcta de montar la tabla de fiabilidad y validez convergente, "
+    "comprobada con WLSMV y un modelo de segundo orden; imítala: "
+    "om <- unlist(semTools::compRelSEM(ajuste)); "
+    "al <- unlist(semTools::compRelSEM(ajuste, tau.eq = TRUE, ord.scale = FALSE)); "
+    "ave <- semTools::AVE(ajuste); "
+    "df_om <- data.frame(Factor = names(om), Omega = round(as.numeric(om), 3)); "
+    "df_al <- data.frame(Factor = names(al), Alfa = round(as.numeric(al), 3)); "
+    "df_ave <- data.frame(Factor = names(ave), AVE = round(as.numeric(ave), 3)); "
+    "tabla(merge(merge(df_om, df_al, by = 'Factor'), df_ave, by = 'Factor')). Une por nombre con "
+    "merge y no por posición. Cada elemento de la lista que devuelve compRelSEM es un número con "
+    "atributos, no una lista: pedirle x$omega detiene el bloque con el operador $ no es válido "
+    "para vectores atómicos, y basta unlist() o as.numeric(). Con esta receta omega y alfa salen "
+    "siempre, también con WLSMV e indicadores ordinales, así que no escribas que el paquete o el "
+    "estimador no permiten calcularlos ni presentes una columna de NA: si te salen NA es que los "
+    "has extraído mal, vuelve a intentarlo con estas líneas."
 )
 for name in ("Análisis factorial confirmatorio", "Consistencia interna",
              "Invarianza de medida", "Fiabilidad"):
@@ -1269,6 +1284,9 @@ REFERENCIAS = {
         "Kline, R. B. (2023). Principles and practice of structural equation modeling (5.ª ed.). Guilford Press.",
         "Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. Journal of Statistical Software, 48(2), 1-36. https://doi.org/10.18637/jss.v048.i02",
         "Hu, L., y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. Structural Equation Modeling, 6(1), 1-55. https://doi.org/10.1080/10705519909540118",
+        "Fornell, C., y Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. Journal of Marketing Research, 18(1), 39-50. https://doi.org/10.1177/002224378101800104",
+        "Henseler, J., Ringle, C. M., y Sarstedt, M. (2015). A new criterion for assessing discriminant validity in variance-based structural equation modeling. Journal of the Academy of Marketing Science, 43(1), 115-135. https://doi.org/10.1007/s11747-014-0403-8",
+        "Hair, J. F., Black, W. C., Babin, B. J., y Anderson, R. E. (2019). Multivariate data analysis (8.ª ed.). Cengage.",
     ],
     "Análisis factorial exploratorio": [
         "Watkins, M. W. (2021). A step-by-step guide to exploratory factor analysis with R and RStudio. Routledge.",
