@@ -107,6 +107,7 @@ footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--borde);
   <li><a href="#problemas">Solución de problemas</a></li>
   <li><a href="#autoria">Autoría y condiciones de uso</a></li>
   <li><a href="#fuentes">Documentación de referencia</a></li>
+  <li><a href="#firmas">Firmas reales de las funciones de R</a></li>
   <li><a href="#referencias">Referencias bibliográficas de los resultados</a></li>
 </ol>
 </nav>
@@ -516,6 +517,14 @@ El software es de <b>uso libre y gratuito para investigación y docencia</b>.</p
 <p>Las recomendaciones se apoyan en los manuales de R y la documentación de los
 autores de los paquetes enlazados en cada procedimiento. Las páginas externas
 requieren conexión; el contenido de esta guía se puede leer sin red.</p>
+
+<h3 id="firmas">Firmas reales de las funciones de R</h3>
+<p>Antes de preguntar nada al endpoint, la aplicación lee en <b>tu</b> instalación de R la
+firma de cada función que la plantilla nombra o que tú mencionas en la consulta, con el
+número de versión del paquete, y se la entrega al modelo. Así el código se escribe contra
+los argumentos que existen hoy en tu equipo y no contra los que tenía una versión
+anterior del paquete. Si actualizas un paquete y cambian sus argumentos, el cambio se
+recoge en la siguiente consulta sin tocar nada.</p>
 
 <h3 id="referencias">Referencias bibliográficas de los resultados</h3>
 <p>Cada plantilla lleva asociada su propia bibliografía, y el informe termina

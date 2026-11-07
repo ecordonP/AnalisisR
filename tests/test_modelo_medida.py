@@ -259,3 +259,122 @@ def test_los_prompts_de_lavaan_cuentan_los_parametros_con_npar(name):
     # compRelSEM con simplify=TRUE devuelve un vector sin nombres: comprobado en R.
     assert "simplify igual a FALSE" in prompt and "names() sobre él es NULL" in prompt
     assert "una sola variable latente no hay pares" in prompt
+
+
+def test_una_consulta_libre_recibe_las_guias_de_api():
+    """El prompt del usuario no lleva reglas de plantilla: sin esto inventa la API antigua."""
+    consulta = ("Usando lavaan estima un modelo factorial de segundo orden. Determina la "
+                "normalidad multivariante y con semTools calcula omega, AVE y la matriz HTMT.")
+    guias = app.guias_necesarias(consulta)
+    assert len(guias) == 3
+    texto = " ".join(guias)
+    for pieza in ("no existen mvnMethod, multivariateNorm", "univariateTest",
+                  "semTools::htmt recibe como primer argumento la sintaxis del modelo",
+                  "no existe method", "htmt2", "lavaan::lavInspect"):
+        assert pieza in texto, pieza
+
+
+def test_una_consulta_de_plantilla_no_recibe_guias(tmp_path, monkeypatch):
+    """Las plantillas ya son autocontenidas: repetirles las guías solo gasta contexto."""
+    class Backend:
+        last_truncated = False
+
+        def __init__(self):
+            self.prompts = []
+
+        def chat(self, system, user):
+            self.prompts.append(user)
+            return "Sin cálculo."
+
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: None)
+    backend = Backend()
+    app.converse({"ask": app.TEMPLATES["Análisis factorial confirmatorio"],
+                  "plantilla": "Análisis factorial confirmatorio",
+                  "profile": None, "run_r": False}, tmp_path, backend)
+    assert "USO CORRECTO DEL PAQUETE" not in backend.prompts[0]
+
+
+def test_la_guia_de_mvn_llega_al_contexto_de_la_consulta(tmp_path, monkeypatch):
+    """Comprueba el punto de inserción real en converse, no solo la selección."""
+    class Backend:
+        last_truncated = False
+
+        def __init__(self):
+            self.prompts = []
+
+        def chat(self, system, user):
+            self.prompts.append(user)
+            return "Sin cálculo."
+
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: None)
+    backend = Backend()
+    app.converse({"ask": "Comprueba la normalidad multivariante de los ítems con MVN",
+                  "profile": None, "run_r": False}, tmp_path, backend)
+    assert "no existen mvnMethod" in backend.prompts[0]
+    assert "USO CORRECTO DEL PAQUETE" in backend.prompts[0]
+
+
+def test_las_firmas_se_leen_del_r_instalado():
+    """Escritas a mano caducarían al actualizar el paquete; aquí salen de args()."""
+    import analisisr_core as engine
+
+    rs = engine.find_rscript()
+    if not rs:
+        pytest.skip("Requiere Rscript")
+    consulta = "normalidad multivariante con MVN y un modelo con lavaan"
+    objetivo = app.funciones_a_documentar(consulta)
+    assert "MVN::mvn" in objetivo and "lavaan::sem" in objetivo
+    firmas = engine.function_signatures(rs, objetivo)
+    assert "MVN::mvn" in firmas and "mvn_test" in firmas
+    # La versión instalada queda escrita junto a la firma.
+    assert "[MVN " in firmas and "[lavaan " in firmas
+    # Una función inexistente se declara como tal en vez de callarse.
+    inventada = engine.function_signatures(rs, ["MVN::mvnMethod"])
+    assert "NO EXISTE" in inventada
+
+
+def test_las_funciones_citadas_con_dos_puntos_se_documentan():
+    objetivo = app.funciones_a_documentar("usa car::leveneTest y stats::oneway.test")
+    assert objetivo[:2] == ["car::leveneTest", "stats::oneway.test"]
+    assert app.funciones_a_documentar("dame los descriptivos de edad") == []
+
+
+def test_el_punto_final_de_la_frase_no_se_cuela_en_el_nombre():
+    """stats::lm. no existe: la consulta se gastaría en una función inventada."""
+    assert app.funciones_a_documentar("ajusta con stats::lm.") == ["stats::lm"]
+    for name in app.TEMPLATES:
+        assert not [f for f in app.funciones_a_documentar(app.TEMPLATES[name]) if f.endswith(".")]
+
+
+def test_las_firmas_se_consultan_antes_de_llamar_al_endpoint(tmp_path, monkeypatch):
+    """El primer paso de cada consulta es leer la firma real en R, no preguntar al modelo."""
+    orden = []
+
+    class Backend:
+        last_truncated = False
+        ultimo = ""
+
+        def chat(self, system, user):
+            orden.append("endpoint")
+            Backend.ultimo = user
+            return "Sin cálculo."
+
+    def firmas(*a, **kw):
+        orden.append("firmas")
+        return "MVN::mvn [MVN 6.3]: function (data, mvn_test = 'hz')"
+
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: "Rscript")
+    monkeypatch.setattr(app.engine, "function_signatures", firmas)
+    monkeypatch.setattr(app.engine, "diagnose_r", lambda: {"packages": []})
+    app.converse({"ask": "comprueba la normalidad multivariante con MVN::mvn",
+                  "profile": None, "run_r": True}, tmp_path, Backend())
+    assert orden[:2] == ["firmas", "endpoint"], orden
+    assert "FIRMAS REALES" in Backend.ultimo and "mvn_test" in Backend.ultimo
+
+
+def test_se_documentan_todas_las_funciones_de_la_plantilla_mas_grande():
+    """El tope no puede recortar la lista: la plantilla mayor nombra dieciséis funciones."""
+    import analisisr_core as engine
+
+    mayor = max((len(app.funciones_a_documentar(p)) for p in app.TEMPLATES.values()))
+    assert mayor <= engine.FIRMAS_MAX, (mayor, engine.FIRMAS_MAX)

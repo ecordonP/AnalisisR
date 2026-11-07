@@ -236,3 +236,31 @@ def test_el_prompt_prohibe_citar_fuera_de_la_lista():
         assert "No añadas ninguna obra que no esté en la lista" in prompt, name
         assert "no inventes autores, años, páginas ni DOI" in prompt, name
         assert "R.version.string" in prompt, name
+
+
+def test_una_consulta_libre_recibe_bibliografia_de_su_tema():
+    """Las plantillas la llevan dentro; el texto libre la recibe por el tema detectado."""
+    obras = app.bibliografia_para("modelo de segundo orden con lavaan y normalidad multivariante")
+    assert obras, "una consulta de SEM debe traer bibliografía"
+    assert any("Kline" in o for o in obras) and any("MVN" in o for o in obras)
+    assert len(obras) == len(set(obras)), "no debe repetir obras entre temas"
+    assert app.bibliografia_para("hola") == []
+
+
+def test_la_bibliografia_libre_llega_al_contexto(tmp_path, monkeypatch):
+    class Backend:
+        last_truncated = False
+
+        def __init__(self):
+            self.prompts = []
+
+        def chat(self, system, user):
+            self.prompts.append(user)
+            return "Sin cálculo."
+
+    monkeypatch.setattr(app.engine, "find_rscript", lambda: None)
+    backend = Backend()
+    app.converse({"ask": "Haz una regresión logística de compra sobre edad",
+                  "profile": None, "run_r": False}, tmp_path, backend)
+    assert "BIBLIOGRAFÍA DE ESTA CONSULTA" in backend.prompts[0]
+    assert "Hosmer" in backend.prompts[0]

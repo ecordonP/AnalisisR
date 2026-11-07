@@ -1105,11 +1105,20 @@ for name in ("Análisis factorial confirmatorio", "Consistencia interna",
              "Invarianza de medida", "Mediación"):
     TEMPLATES[name] += LAVAAN_ROWS
 MVN_CALL = (
-    " Sobre MVN: una llamada a MVN::mvn devuelve una sola prueba, así que invócala una vez por "
+    " Sobre MVN, versión 6.3 instalada en este equipo: su única interfaz es MVN::mvn y sus "
+    "argumentos son exactamente data, subset, mvn_test, use_population, tol, alpha, outlier_seed, "
+    "scale, descriptives, transform, impute, bootstrap, B, cores, univariate_test, "
+    "multivariate_outlier_method, power_family, power_transform_type, show_new_data y tidy. "
+    "Cualquier otro nombre detiene el bloque con el error los argumentos no fueron usados: en "
+    "concreto no existen mvnMethod, multivariateNorm, univariateTest, multivariatePlot, desc ni "
+    "mvnTest, que son de versiones antiguas del paquete. Una llamada devuelve una sola prueba "
+    "multivariante, la de mvn_test, y una sola univariante, la de univariate_test, así que "
+    "invócala una vez por "
     "prueba con mvn_test igual a su código, que puede ser mardia, hz, hw, royston, doornik_hansen "
-    "o energy, pasando solo el data.frame y mvn_test. No existen en esta versión desc, "
-    "univariateTest, multivariatePlot ni mvnTest, y pasarlos detiene el bloque con el error el "
-    "argumento no fue usado. Lee el componente multivariate_normality, cuyas columnas son Test, "
+    "o energy, pasando solo el data.frame y mvn_test. Los códigos univariantes son SW, SF, AD, CVM "
+    "y Lillie. El data.frame debe contener solo columnas numéricas: filtra antes con "
+    "Filter(is.numeric, dat) o selecciona las columnas por nombre. Lee el componente "
+    "multivariate_normality, cuyas columnas son Test, "
     "Statistic, p.value, Method y MVN con esas mayúsculas, más df solo en Doornik-Hansen. La "
     "llamada con mardia devuelve dos filas, asimetría y curtosis, y cada una de las demás pruebas "
     "una sola: no escribas a mano un vector con los nombres de las pruebas, porque en cuanto no "
@@ -1122,6 +1131,43 @@ MVN_CALL = (
 )
 for name in ("Análisis factorial confirmatorio", "Invarianza de medida"):
     TEMPLATES[name] += MVN_CALL
+SEMTOOLS_CALL = (
+    " Sobre semTools, versión 0.5.10 instalada en este equipo: semTools::htmt recibe como primer "
+    "argumento la sintaxis del modelo de medida de lavaan, no el data.frame ni una lista de "
+    "grupos de ítems, y los datos van en data. Sus argumentos son model, data, sample.cov, "
+    "missing, ordered, absolute y htmt2, y ninguno más: no existe method, y pasar los datos en "
+    "primera posición hace que lavaan intente leerlos como modelo y detiene el bloque con formula "
+    "without valid operator. Por omisión htmt2 vale TRUE y devuelve el HTMT2, la media "
+    "geométrica, mientras que htmt2 igual a FALSE devuelve el HTMT clásico, la media aritmética: "
+    "para presentar los dos, llama dos veces al mismo modelo cambiando solo ese argumento. Con "
+    "indicadores ordinales declara ordered con sus nombres. Devuelve una matriz triangular sin "
+    "intervalos de confianza: si te piden intervalos, obtenlos remuestreando casos con una "
+    "semilla declarada y recalculando el HTMT en cada réplica, e informa del número de réplicas, "
+    "o di que el paquete no los proporciona. La fiabilidad compuesta es "
+    "semTools::compRelSEM(ajuste), con tau.eq igual a TRUE si quieres el alfa, y la varianza "
+    "media extraída es semTools::AVE(ajuste); ambas se calculan sobre el ajuste de lavaan, no "
+    "sobre los datos. Comprobado también sobre un modelo de segundo orden: AVE devuelve un "
+    "vector numérico con el nombre de cada factor de primer orden y ninguno más, de modo que se "
+    "indexa con una sola dimensión, ave de los nombres, y escribir dos índices detiene el bloque "
+    "con número incorreto de dimensiones. compRelSEM devuelve una lista con un elemento por "
+    "factor, cada uno con texto explicativo alrededor del número: conviértelo con unlist() o con "
+    "as.numeric(), o pasa simplify igual a TRUE, que devuelve un vector sin nombres a los que "
+    "tendrás que poner tú los de los factores. No pases higher, que está obsoleto: los factores "
+    "de orden superior se detectan solos. Y htmt solo admite el modelo de medida de primer "
+    "orden: si tu sintaxis incluye el factor de segundo orden, quita esa línea antes de llamarlo "
+    "o se detiene con Missing observed variables in the dataset seguido de los nombres de los "
+    "factores. Antes de montar una tabla con varios de estos resultados, comprueba que todos "
+    "tienen la misma longitud, porque el factor de segundo orden aparece en unos y no en otros. "
+    "Con indicadores declarados como ordinales, es decir con ordered y WLSMV, compRelSEM con "
+    "tau.eq igual a TRUE se detiene porque el alfa pedido sería el de la escala ordinal "
+    "observada y no el de la escala latente: para el alfa en esa situación añade ord.scale igual "
+    "a FALSE, declarando que es el alfa sobre la respuesta latente continua, y deja el omega en "
+    "la escala observada con ord.scale igual a TRUE, que es el valor por omisión. Explica esa "
+    "diferencia al presentarlos juntos en lugar de mezclar las dos escalas en una sola columna."
+)
+for name in ("Análisis factorial confirmatorio", "Consistencia interna",
+             "Invarianza de medida", "Fiabilidad"):
+    TEMPLATES[name] += SEMTOOLS_CALL
 TEMPLATES = {name: prompt + (
     " En todos los cálculos documenta ausentes, n efectivo y exclusiones, sin imputar ni recodificar "
     "silenciosamente. Salvo hipótesis direccional previa, usa contrastes bilaterales, alfa=0,05 e "
@@ -1329,6 +1375,96 @@ CITAS = (
 )
 TEMPLATES = {name: prompt + CITAS + " ".join(REFERENCIAS[name])
              for name, prompt in TEMPLATES.items()}
+# Guías de API que se añaden al contexto cuando la consulta las necesita. Una consulta
+# escrita a mano no lleva las reglas de ninguna plantilla, y sin ellas el modelo recurre a
+# la API antigua del paquete y gasta sus ejecuciones en errores de argumento no usado.
+# Cada entrada: qué pide la consulta, una marca que indica que ya las trae, y la guía.
+GUIAS_API = (
+    # AVE lleva delimitadores: sin ellos casaba dentro de clave y de grave.
+    (re.compile(r"MVN|mardia|henze|royston|doornik|normalidad", re.I),
+     "mvn_test", MVN_CALL),
+    (re.compile(r"HTMT|validez discriminante|fiabilidad compuesta|varianza media extraída|"
+                r"AVE|semTools", re.I),
+     "semTools::htmt", SEMTOOLS_CALL),
+    # Sin ecuaciones estructurales a secas: las plantillas la mencionan de pasada al hablar
+    # de consecuencias, y la guía se colaba donde no se usa lavaan.
+    (re.compile(r"lavaan|factorial confirmatorio|segundo orden|invarianza|"
+                r"variables? latentes?|modelo de medida|sem\(|cfa\(", re.I),
+     "lavaan::lavInspect", LAVAAN_ROWS),
+)
+
+
+def guias_necesarias(ask: str) -> list[str]:
+    """Guías de uso de paquete que la consulta necesita y todavía no incluye."""
+    return [guia for patron, marca, guia in GUIAS_API if patron.search(ask) and marca not in ask]
+
+
+# Funciones que se documentan cuando la consulta nombra el paquete sin escribir pkg::fn.
+# Las firmas no se escriben aquí: se leen del R instalado en cada consulta.
+FUNCIONES_POR_TEMA = (
+    (re.compile(r"\bMVN\b|normalidad multivariante|mardia|henze|royston|doornik", re.I),
+     ("MVN::mvn",)),
+    (re.compile(r"lavaan|factorial confirmatorio|segundo orden|invarianza|modelo de medida|"
+                r"variables? latentes?", re.I),
+     ("lavaan::sem", "lavaan::cfa", "lavaan::parameterEstimates", "lavaan::standardizedSolution",
+      "lavaan::fitMeasures", "lavaan::lavInspect")),
+    (re.compile(r"semTools|HTMT|validez discriminante|fiabilidad compuesta|\bAVE\b", re.I),
+     ("semTools::htmt", "semTools::compRelSEM", "semTools::AVE")),
+    (re.compile(r"\bpsych\b|análisis paralelo|policórica|alfa ordinal", re.I),
+     ("psych::fa.parallel", "psych::polychoric", "psych::fa")),
+)
+
+
+# Bibliografía para consultas escritas a mano: se toma prestada de la plantilla del tema.
+TEMAS_BIBLIO = (
+    (re.compile(r"\bMVN\b|normalidad (?:multi|uni|bi)variante|mardia|henze", re.I), "Normalidad"),
+    (re.compile(r"lavaan|factorial confirmatorio|segundo orden|modelo de medida|"
+                r"ecuaciones estructurales", re.I), "Análisis factorial confirmatorio"),
+    (re.compile(r"invarianza", re.I), "Invarianza de medida"),
+    (re.compile(r"HTMT|\bAVE\b|fiabilidad|alfa de cronbach|omega|consistencia interna", re.I),
+     "Consistencia interna"),
+    (re.compile(r"mediaci[óo]n|efecto indirecto", re.I), "Mediación"),
+    (re.compile(r"moderaci[óo]n|interacci[óo]n", re.I), "Moderación"),
+    (re.compile(r"multinivel|efectos (?:mixtos|aleatorios)|lme4|lmer", re.I), "Modelo multinivel"),
+    (re.compile(r"supervivencia|coxph|kaplan", re.I), "Análisis de supervivencia"),
+    (re.compile(r"\bROC\b|sensibilidad y especificidad|curva ROC", re.I),
+     "Curva ROC y capacidad diagnóstica"),
+    (re.compile(r"cl[úu]ster|conglomerados|k-?means", re.I), "Análisis clúster"),
+    (re.compile(r"imputaci[óo]n|\bmice\b|valores ausentes", re.I), "Ausentes e imputación múltiple"),
+    (re.compile(r"regresi[óo]n log[íi]stica", re.I), "Regresión logística"),
+    (re.compile(r"regresi[óo]n lineal|\blm\(|m[íi]nimos cuadrados", re.I), "Regresión"),
+    (re.compile(r"\bANOVA\b", re.I), "ANOVA"),
+    (re.compile(r"factorial exploratorio|\bEFA\b|análisis paralelo", re.I),
+     "Análisis factorial exploratorio"),
+    (re.compile(r"correlaci[óo]n", re.I), "Correlación"),
+)
+# shortcut: tres temas por consulta; subirlo alarga el contexto sin añadir precisión.
+TEMAS_MAX = 3
+
+
+def bibliografia_para(ask: str) -> list[str]:
+    """Obras citables de los temas que toca una consulta escrita a mano."""
+    obras, vistas = [], set()
+    for patron, tema in TEMAS_BIBLIO:
+        if len(vistas) >= TEMAS_MAX:
+            break
+        if patron.search(ask) and tema not in vistas:
+            vistas.add(tema)
+            obras.extend(o for o in REFERENCIAS[tema] if o not in obras)
+    return obras
+
+
+def funciones_a_documentar(ask: str) -> list[str]:
+    """Funciones cuya firma real conviene leer antes de que el modelo escriba el código."""
+    # El punto final de la frase se pega al nombre: stats::lm. no existe y gastaría una consulta.
+    nombres = [f"{pkg}::{fn.rstrip('.')}"
+               for pkg, fn in re.findall(r"\b([A-Za-z][\w.]*)::([\w.]+)", ask) if fn.strip(".")]
+    for patron, funciones in FUNCIONES_POR_TEMA:
+        if patron.search(ask):
+            nombres.extend(funciones)
+    return list(dict.fromkeys(nombres))
+
+
 SYSTEM = """Eres el asistente estadístico de AnalizaR Desktop. Responde en español y Markdown.
 Escribe las fórmulas estadísticas con símbolos Unicode legibles (μ, σ, ≠, ≤, H₀, R²),
 sin delimitadores de matemáticas ni comandos LaTeX; conserva literalmente el código R.
@@ -1482,6 +1618,29 @@ def converse(request: dict, folder: Path, backend=None) -> dict:
     for turn in request.get("history", [])[-20:]:
         context.append(f"{turn['role']}: {turn['content']}")
     context.append("USUARIO: " + request["ask"])
+    # Solo para consultas escritas a mano: las plantillas ya llevan sus propias reglas.
+    for guia in ([] if request.get("plantilla") else guias_necesarias(request["ask"])):
+        context.append("USO CORRECTO DEL PAQUETE EN LAS VERSIONES INSTALADAS, "
+                       "comprobado contra este mismo R:" + guia)
+    # Una consulta a mano también merece sus referencias: la plantilla las lleva dentro.
+    if not request.get("plantilla"):
+        obras = bibliografia_para(request["ask"])
+        if obras:
+            context.append("BIBLIOGRAFÍA DE ESTA CONSULTA." + CITAS + " ".join(obras))
+    # Las firmas se leen del R del usuario en cada consulta: una actualización de paquete
+    # cambia los argumentos y una regla escrita a mano se quedaría obsoleta sin avisar.
+    if enabled and rs:
+        objetivo = funciones_a_documentar(request["ask"])
+        if objetivo:
+            engine.log("PASO: Consultando en R la firma real de " + ", ".join(objetivo[:4])
+                       + (", …" if len(objetivo) > 4 else ""))
+            firmas = engine.function_signatures(rs, objetivo, temp_dir=folder)
+            if firmas:
+                context.append(
+                    "FIRMAS REALES DE LAS FUNCIONES EN EL R DE ESTE EQUIPO, leídas con args() "
+                    "al empezar esta consulta. Son la verdad sobre las versiones instaladas: "
+                    "usa exactamente estos argumentos y no inventes ninguno que no aparezca, "
+                    "aunque lo recuerdes de otra versión del paquete.\n" + firmas)
     context.append("FORMATO OBLIGATORIO: " + RESULT_FORMAT)
     scripts = []
     last_ok, last_output = False, ""
@@ -2464,7 +2623,8 @@ def create_window():
                                          "content": turn.get("context", turn["content"])}
                                         for turn in self.history],
                                run_r=self.run_r.isChecked(), share_output=self.share.isChecked(),
-                               show_code=self.show_code.isChecked(), packages=self.r_diagnosis)
+                               show_code=self.show_code.isChecked(), packages=self.r_diagnosis,
+                               plantilla=plantilla or "")
                 etiqueta = "Análisis solicitado: " + plantilla if plantilla else request["ask"]
                 ui.render_chat(self.chat, "Tú",
                                "Realizando análisis solicitado… Espere por favor."

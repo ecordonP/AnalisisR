@@ -92,6 +92,14 @@ points at an R folder, with no restart. Operations disable `self.locked_pages` i
 hardcoded tab indices, and `finished()` re-applies the gate — so inserting or reordering
 a tab does not break them.
 
+**Signatures come from the installed R, never from memory.** Before the first endpoint
+call, `converse` runs `engine.function_signatures()` (one `Rscript` invocation, ~1-2 s) for
+every `pkg::fn` named in the query plus the ones `FUNCIONES_POR_TEMA` maps from keywords,
+and puts the real `args()` output and package version in the context. Hardcoded argument
+lists go stale when the user updates a package; this does not. The prose guides in
+`GUIAS_API` carry only the gotchas a signature cannot show, and are injected for
+hand-written queries (templates already embed their own).
+
 **The chat/R loop** (`converse`, `AnalisisR.py:580`) is the core of the app: the model gets
 the dictionary **without rows**, may propose R blocks, and each block is syntax-checked
 locally (`engine.r_parse_check`) before running. Hard caps live inline: 6 R attempts,

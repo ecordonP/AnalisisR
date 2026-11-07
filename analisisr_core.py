@@ -1598,6 +1598,56 @@ def chat_r_help(rs: str | None, topicos: list[str], temp_dir: Path | None = None
             shutil.rmtree(carpeta, ignore_errors=True)
     return "\n\n".join(CHAT_HELP_CACHE[(rs, t)] for t in limpios)
 
+CHAT_SIGN_R = r"""
+topicos <- commandArgs(trailingOnly = TRUE)
+for (topico in topicos) {
+  partes <- strsplit(topico, "::", fixed = TRUE)[[1]]
+  pkg <- partes[1]
+  fn <- partes[2]
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    cat(topico, ": PAQUETE NO INSTALADO, no lo uses\n", sep = "")
+    next
+  }
+  version <- as.character(utils::packageVersion(pkg))
+  f <- try(get(fn, envir = asNamespace(pkg)), silent = TRUE)
+  if (inherits(f, "try-error") || !is.function(f)) {
+    cat(topico, ": NO EXISTE en la version ", version, " instalada\n", sep = "")
+    next
+  }
+  cat(topico, " [", pkg, " ", version, "]: ",
+      paste(trimws(deparse(args(f))), collapse = " "), "\n", sep = "")
+}
+"""
+# Tope alto a propósito: la plantilla más grande nombra 17 funciones y deben documentarse
+# todas. Una sola llamada a Rscript las resuelve, así que el coste no crece con la lista.
+# shortcut: 30 funciones por consulta; subirlo solo si una plantilla llega a nombrar más.
+FIRMAS_MAX = 30
+
+
+def function_signatures(rs: str | None, nombres, temp_dir: Path | None = None,
+                        timeout: int = 60) -> str:
+    """Firmas reales de `pkg::fn` leídas del R instalado.
+
+    Las reglas escritas a mano caducan cuando el usuario actualiza un paquete; esto se
+    lee en el momento de la consulta, así que siempre describe la versión que ejecutará
+    el código.
+    """
+    limpios = [n for n in dict.fromkeys(nombres)
+               if re.fullmatch(r"[A-Za-z][\w.]*::[\w.]+", n or "")][:FIRMAS_MAX]
+    if not rs or not limpios:
+        return ""
+    carpeta = Path(tempfile.mkdtemp(prefix="analizar_firmas_", dir=temp_dir))
+    try:
+        script = carpeta / "firmas.R"
+        script.write_text(CHAT_SIGN_R, encoding="utf-8")
+        salida, _err, codigo = run_process([rs, str(script), *limpios], timeout=timeout)
+        return (salida or "").strip() if codigo == 0 else ""
+    except Exception as exc:                                      # noqa: BLE001
+        log(f"no se pudieron leer las firmas de R: {exc}")
+        return ""
+    finally:
+        shutil.rmtree(carpeta, ignore_errors=True)
+
 CHAT_R_PROHIBIDO = (
     "system", "system2", "shell", "shell.exec", "unlink", "file.remove", "file.rename",
     "file.copy", "file.create", "dir.create", "setwd", "install.packages", "remove.packages",
