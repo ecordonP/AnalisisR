@@ -1161,6 +1161,174 @@ TEMPLATES = {name: prompt + (
     "interpretativo que se construya a partir de los resultados calculados; no afirmes haber visto una "
     "salida que no recibiste. No inventes relevancia clínica o práctica sin un umbral definido por el usuario."
 ) for name, prompt in sorted(TEMPLATES.items(), key=lambda item: unicodedata.normalize("NFKD", item[0]).casefold())}
+# Bibliografía por procedimiento. Lista cerrada: el modelo cita de aquí y no inventa.
+# Sin comillas dobles ni corchetes, que romperían el relleno de la consulta.
+REFERENCIAS = {
+    "ANCOVA": [
+        "Maxwell, S. E., Delaney, H. D., y Kelley, K. (2018). Designing experiments and analyzing data: A model comparison perspective (3.ª ed.). Routledge.",
+        "Fox, J., y Weisberg, S. (2019). An R companion to applied regression (3.ª ed.). Sage.",
+        "Lenth, R. V. (2024). emmeans: Estimated marginal means, aka least-squares means. Paquete de R. https://rvlenth.github.io/emmeans/",
+    ],
+    "ANOVA": [
+        "Maxwell, S. E., Delaney, H. D., y Kelley, K. (2018). Designing experiments and analyzing data: A model comparison perspective (3.ª ed.). Routledge.",
+        "Delacre, M., Lakens, D., y Leys, C. (2017). Why psychologists should by default use Welch t-test instead of Student t-test. International Review of Social Psychology, 30(1), 92-101. https://doi.org/10.5334/irsp.82",
+        "Lakens, D. (2013). Calculating and reporting effect sizes to facilitate cumulative science. Frontiers in Psychology, 4, 863. https://doi.org/10.3389/fpsyg.2013.00863",
+    ],
+    "ANOVA de medidas repetidas": [
+        "Maxwell, S. E., Delaney, H. D., y Kelley, K. (2018). Designing experiments and analyzing data: A model comparison perspective (3.ª ed.). Routledge.",
+        "Singmann, H., Bolker, B., Westfall, J., Aust, F., y Ben-Shachar, M. S. (2024). afex: Analysis of factorial experiments. Paquete de R. https://afex.singmann.science/",
+        "Lakens, D. (2013). Calculating and reporting effect sizes to facilitate cumulative science. Frontiers in Psychology, 4, 863. https://doi.org/10.3389/fpsyg.2013.00863",
+    ],
+    "Acuerdo entre evaluaciones": [
+        "Gwet, K. L. (2014). Handbook of inter-rater reliability (4.ª ed.). Advanced Analytics.",
+        "Koo, T. K., y Li, M. Y. (2016). A guideline of selecting and reporting intraclass correlation coefficients for reliability research. Journal of Chiropractic Medicine, 15(2), 155-163. https://doi.org/10.1016/j.jcm.2016.02.012",
+        "McHugh, M. L. (2012). Interrater reliability: The kappa statistic. Biochemia Medica, 22(3), 276-282. https://doi.org/10.11613/BM.2012.031",
+    ],
+    "Análisis clúster": [
+        "Kaufman, L., y Rousseeuw, P. J. (2005). Finding groups in data: An introduction to cluster analysis. Wiley.",
+        "Everitt, B. S., Landau, S., Leese, M., y Stahl, D. (2011). Cluster analysis (5.ª ed.). Wiley.",
+        "Hennig, C., Meila, M., Murtagh, F., y Rocci, R. (Eds.). (2015). Handbook of cluster analysis. Chapman and Hall/CRC.",
+    ],
+    "Análisis de supervivencia": [
+        "Therneau, T. M., y Grambsch, P. M. (2000). Modeling survival data: Extending the Cox model. Springer.",
+        "Kleinbaum, D. G., y Klein, M. (2012). Survival analysis: A self-learning text (3.ª ed.). Springer.",
+        "Moore, D. F. (2016). Applied survival analysis using R. Springer.",
+    ],
+    "Análisis discriminante": [
+        "Tabachnick, B. G., y Fidell, L. S. (2019). Using multivariate statistics (7.ª ed.). Pearson.",
+        "Hastie, T., Tibshirani, R., y Friedman, J. (2009). The elements of statistical learning (2.ª ed.). Springer. Libre en https://hastie.su.domains/ElemStatLearn/",
+        "Venables, W. N., y Ripley, B. D. (2002). Modern applied statistics with S (4.ª ed.). Springer.",
+    ],
+    "Análisis factorial confirmatorio": [
+        "Brown, T. A. (2015). Confirmatory factor analysis for applied research (2.ª ed.). Guilford Press.",
+        "Kline, R. B. (2023). Principles and practice of structural equation modeling (5.ª ed.). Guilford Press.",
+        "Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. Journal of Statistical Software, 48(2), 1-36. https://doi.org/10.18637/jss.v048.i02",
+        "Hu, L., y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. Structural Equation Modeling, 6(1), 1-55. https://doi.org/10.1080/10705519909540118",
+    ],
+    "Análisis factorial exploratorio": [
+        "Watkins, M. W. (2021). A step-by-step guide to exploratory factor analysis with R and RStudio. Routledge.",
+        "Fabrigar, L. R., y Wegener, D. T. (2012). Exploratory factor analysis. Oxford University Press.",
+        "Flora, D. B., y Flake, J. K. (2017). The purpose and practice of exploratory and confirmatory factor analysis in psychological research. Canadian Journal of Behavioural Science, 49(2), 78-88. https://doi.org/10.1037/cbs0000069",
+        "Revelle, W. (2024). psych: Procedures for psychological, psychometric and personality research. Paquete de R. https://personality-project.org/r/psych/",
+    ],
+    "Antes y después": [
+        "Maxwell, S. E., Delaney, H. D., y Kelley, K. (2018). Designing experiments and analyzing data: A model comparison perspective (3.ª ed.). Routledge.",
+        "Lakens, D. (2013). Calculating and reporting effect sizes to facilitate cumulative science. Frontiers in Psychology, 4, 863. https://doi.org/10.3389/fpsyg.2013.00863",
+        "Cumming, G. (2014). The new statistics: Why and how. Psychological Science, 25(1), 7-29. https://doi.org/10.1177/0956797613504966",
+    ],
+    "Ausentes e imputación múltiple": [
+        "van Buuren, S. (2018). Flexible imputation of missing data (2.ª ed.). Chapman and Hall/CRC. Libre en https://stefvanbuuren.name/fimd/",
+        "van Buuren, S., y Groothuis-Oudshoorn, K. (2011). mice: Multivariate imputation by chained equations in R. Journal of Statistical Software, 45(3), 1-67. https://doi.org/10.18637/jss.v045.i03",
+        "Enders, C. K. (2022). Applied missing data analysis (2.ª ed.). Guilford Press.",
+    ],
+    "Consistencia interna": [
+        "McNeish, D. (2018). Thanks coefficient alpha, we will take it from here. Psychological Methods, 23(3), 412-433. https://doi.org/10.1037/met0000144",
+        "Revelle, W., y Condon, D. M. (2019). Reliability from alpha to omega: A tutorial. Psychological Assessment, 31(12), 1395-1411. https://doi.org/10.1037/pas0000754",
+        "Zhang, Z., y Yuan, K.-H. (2016). Robust coefficients alpha and omega and confidence intervals with outlying observations and missing data. Educational and Psychological Measurement, 76(3), 387-411. https://doi.org/10.1177/0013164415594658",
+        "Dunn, T. J., Baguley, T., y Brunsden, V. (2014). From alpha to omega: A practical solution to the pervasive problem of internal consistency estimation. British Journal of Psychology, 105(3), 399-412. https://doi.org/10.1111/bjop.12046",
+    ],
+    "Correlación": [
+        "Cohen, J. (1988). Statistical power analysis for the behavioral sciences (2.ª ed.). Erlbaum.",
+        "Bishara, A. J., y Hittner, J. B. (2012). Testing the significance of a correlation with nonnormal data. Psychological Methods, 17(3), 399-417. https://doi.org/10.1037/a0028087",
+        "Schober, P., Boer, C., y Schwarte, L. A. (2018). Correlation coefficients: Appropriate use and interpretation. Anesthesia and Analgesia, 126(5), 1763-1768. https://doi.org/10.1213/ANE.0000000000002864",
+    ],
+    "Curva ROC y capacidad diagnóstica": [
+        "Robin, X., Turck, N., Hainard, A., Tiberti, N., Lisacek, F., Sanchez, J.-C., y Müller, M. (2011). pROC: An open-source package for R and S+ to analyze and compare ROC curves. BMC Bioinformatics, 12, 77. https://doi.org/10.1186/1471-2105-12-77",
+        "Pepe, M. S. (2003). The statistical evaluation of medical tests for classification and prediction. Oxford University Press.",
+        "DeLong, E. R., DeLong, D. M., y Clarke-Pearson, D. L. (1988). Comparing the areas under two or more correlated receiver operating characteristic curves. Biometrics, 44(3), 837-845. https://doi.org/10.2307/2531595",
+    ],
+    "Descriptivos": [
+        "Wickham, H., Çetinkaya-Rundel, M., y Grolemund, G. (2023). R for data science (2.ª ed.). O Reilly. Libre en https://r4ds.hadley.nz/",
+        "Thulin, M. (2024). Modern statistics with R (2.ª ed.). Chapman and Hall/CRC. Libre en https://www.modernstatisticswithr.com/",
+        "Tukey, J. W. (1977). Exploratory data analysis. Addison-Wesley.",
+    ],
+    "Diferencia entre medias": [
+        "Delacre, M., Lakens, D., y Leys, C. (2017). Why psychologists should by default use Welch t-test instead of Student t-test. International Review of Social Psychology, 30(1), 92-101. https://doi.org/10.5334/irsp.82",
+        "Lakens, D. (2013). Calculating and reporting effect sizes to facilitate cumulative science. Frontiers in Psychology, 4, 863. https://doi.org/10.3389/fpsyg.2013.00863",
+        "Maxwell, S. E., Delaney, H. D., y Kelley, K. (2018). Designing experiments and analyzing data: A model comparison perspective (3.ª ed.). Routledge.",
+    ],
+    "Fiabilidad": [
+        "McNeish, D. (2018). Thanks coefficient alpha, we will take it from here. Psychological Methods, 23(3), 412-433. https://doi.org/10.1037/met0000144",
+        "Revelle, W., y Condon, D. M. (2019). Reliability from alpha to omega: A tutorial. Psychological Assessment, 31(12), 1395-1411. https://doi.org/10.1037/pas0000754",
+        "Zhang, Z., y Yuan, K.-H. (2016). Robust coefficients alpha and omega and confidence intervals with outlying observations and missing data. Educational and Psychological Measurement, 76(3), 387-411. https://doi.org/10.1177/0013164415594658",
+    ],
+    "Invarianza de medida": [
+        "Putnick, D. L., y Bornstein, M. H. (2016). Measurement invariance conventions and reporting: The state of the art and future directions for psychological research. Developmental Review, 41, 71-90. https://doi.org/10.1016/j.dr.2016.06.004",
+        "Cheung, G. W., y Rensvold, R. B. (2002). Evaluating goodness-of-fit indexes for testing measurement invariance. Structural Equation Modeling, 9(2), 233-255. https://doi.org/10.1207/S15328007SEM0902_5",
+        "Chen, F. F. (2007). Sensitivity of goodness of fit indexes to lack of measurement invariance. Structural Equation Modeling, 14(3), 464-504. https://doi.org/10.1080/10705510701301834",
+        "Kline, R. B. (2023). Principles and practice of structural equation modeling (5.ª ed.). Guilford Press.",
+    ],
+    "Mediación": [
+        "Hayes, A. F. (2022). Introduction to mediation, moderation, and conditional process analysis (3.ª ed.). Guilford Press.",
+        "MacKinnon, D. P. (2008). Introduction to statistical mediation analysis. Erlbaum.",
+        "Preacher, K. J., y Hayes, A. F. (2008). Asymptotic and resampling strategies for assessing and comparing indirect effects in multiple mediator models. Behavior Research Methods, 40(3), 879-891. https://doi.org/10.3758/BRM.40.3.879",
+        "VanderWeele, T. J. (2015). Explanation in causal inference: Methods for mediation and interaction. Oxford University Press.",
+    ],
+    "Modelo multinivel": [
+        "Hox, J. J., Moerbeek, M., y van de Schoot, R. (2018). Multilevel analysis: Techniques and applications (3.ª ed.). Routledge.",
+        "Snijders, T. A. B., y Bosker, R. J. (2012). Multilevel analysis: An introduction to basic and advanced multilevel modeling (2.ª ed.). Sage.",
+        "Bates, D., Mächler, M., Bolker, B., y Walker, S. (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software, 67(1), 1-48. https://doi.org/10.18637/jss.v067.i01",
+        "Kuznetsova, A., Brockhoff, P. B., y Christensen, R. H. B. (2017). lmerTest package: Tests in linear mixed effects models. Journal of Statistical Software, 82(13), 1-26. https://doi.org/10.18637/jss.v082.i13",
+    ],
+    "Moderación": [
+        "Hayes, A. F. (2022). Introduction to mediation, moderation, and conditional process analysis (3.ª ed.). Guilford Press.",
+        "Aiken, L. S., y West, S. G. (1991). Multiple regression: Testing and interpreting interactions. Sage.",
+        "Cohen, J., Cohen, P., West, S. G., y Aiken, L. S. (2003). Applied multiple regression/correlation analysis for the behavioral sciences (3.ª ed.). Erlbaum.",
+    ],
+    "Normalidad": [
+        "Thode, H. C. (2002). Testing for normality. Marcel Dekker.",
+        "Korkmaz, S., Goksuluk, D., y Zararsiz, G. (2014). MVN: An R package for assessing multivariate normality. The R Journal, 6(2), 151-162. https://doi.org/10.32614/RJ-2014-031",
+        "Mardia, K. V. (1970). Measures of multivariate skewness and kurtosis with applications. Biometrika, 57(3), 519-530. https://doi.org/10.1093/biomet/57.3.519",
+        "Henze, N., y Zirkler, B. (1990). A class of invariant consistent tests for multivariate normality. Communications in Statistics - Theory and Methods, 19(10), 3595-3617. https://doi.org/10.1080/03610929008830400",
+    ],
+    "Regresión": [
+        "Fox, J. (2016). Applied regression analysis and generalized linear models (3.ª ed.). Sage.",
+        "Fox, J., y Weisberg, S. (2019). An R companion to applied regression (3.ª ed.). Sage.",
+        "Harrell, F. E. (2015). Regression modeling strategies (2.ª ed.). Springer.",
+        "Gelman, A., Hill, J., y Vehtari, A. (2020). Regression and other stories. Cambridge University Press. Materiales libres en https://avehtari.github.io/ROS-Examples/",
+    ],
+    "Regresión logística": [
+        "Hosmer, D. W., Lemeshow, S., y Sturdivant, R. X. (2013). Applied logistic regression (3.ª ed.). Wiley.",
+        "Agresti, A. (2019). An introduction to categorical data analysis (3.ª ed.). Wiley.",
+        "Harrell, F. E. (2015). Regression modeling strategies (2.ª ed.). Springer.",
+        "Steyerberg, E. W. (2019). Clinical prediction models (2.ª ed.). Springer.",
+    ],
+    "Regresión multinomial": [
+        "Agresti, A. (2013). Categorical data analysis (3.ª ed.). Wiley.",
+        "Venables, W. N., y Ripley, B. D. (2002). Modern applied statistics with S (4.ª ed.). Springer.",
+        "Hosmer, D. W., Lemeshow, S., y Sturdivant, R. X. (2013). Applied logistic regression (3.ª ed.). Wiley.",
+    ],
+    "Regresión ordinal": [
+        "Agresti, A. (2010). Analysis of ordinal categorical data (2.ª ed.). Wiley.",
+        "Bürkner, P.-C., y Vuorre, M. (2019). Ordinal regression models in psychology: A tutorial. Advances in Methods and Practices in Psychological Science, 2(1), 77-101. https://doi.org/10.1177/2515245918823199",
+        "Christensen, R. H. B. (2023). ordinal: Regression models for ordinal data. Paquete de R. https://cran.r-project.org/package=ordinal",
+    ],
+    "Regresión para recuentos": [
+        "Cameron, A. C., y Trivedi, P. K. (2013). Regression analysis of count data (2.ª ed.). Cambridge University Press.",
+        "Hilbe, J. M. (2014). Modeling count data. Cambridge University Press.",
+        "Zeileis, A., Kleiber, C., y Jackman, S. (2008). Regression models for count data in R. Journal of Statistical Software, 27(8), 1-25. https://doi.org/10.18637/jss.v027.i08",
+    ],
+    "Tablas de contingencia": [
+        "Agresti, A. (2019). An introduction to categorical data analysis (3.ª ed.). Wiley.",
+        "Agresti, A. (2013). Categorical data analysis (3.ª ed.). Wiley.",
+        "Fleiss, J. L., Levin, B., y Paik, M. C. (2003). Statistical methods for rates and proportions (3.ª ed.). Wiley.",
+    ],
+}
+CITAS = (
+    " Cierra siempre la respuesta con una sección final titulada Referencias, después de la "
+    "interpretación, con la lista de obras que figura a continuación, copiadas tal cual, una por "
+    "línea de lista y ordenadas alfabéticamente. Cita en el texto, con autor y año, las que "
+    "respalden cada decisión metodológica que tomes, por ejemplo el criterio de un índice de "
+    "ajuste, la elección de un estimador o la lectura de un tamaño del efecto. No añadas ninguna "
+    "obra que no esté en la lista, no inventes autores, años, páginas ni DOI, y no cites de "
+    "memoria: si necesitas apoyar algo que la lista no cubre, dilo en lugar de citarlo. Añade "
+    "también R con la versión realmente usada, que obtienes imprimiendo R.version.string en tu "
+    "bloque, con esta forma: R Core Team y el año de esa versión, R: A language and environment "
+    "for statistical computing, R Foundation for Statistical Computing, Viena, "
+    "https://www.R-project.org/. Estas son las obras que puedes citar, y ninguna más: "
+)
+TEMPLATES = {name: prompt + CITAS + " ".join(REFERENCIAS[name])
+             for name, prompt in TEMPLATES.items()}
 SYSTEM = """Eres el asistente estadístico de AnalizaR Desktop. Responde en español y Markdown.
 Escribe las fórmulas estadísticas con símbolos Unicode legibles (μ, σ, ≠, ≤, H₀, R²),
 sin delimitadores de matemáticas ni comandos LaTeX; conserva literalmente el código R.

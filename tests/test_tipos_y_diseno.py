@@ -214,3 +214,25 @@ def test_levene_recibe_el_grupo_como_factor():
 def test_ninguna_plantilla_permite_objetos_numerados_por_grupo():
     for name, prompt in app.TEMPLATES.items():
         assert "desc_g1" in prompt and "do.call(rbind, ...)" in prompt, name
+
+
+def test_cada_plantilla_trae_su_bibliografia_citable():
+    """La lista es cerrada: sin ella el modelo inventaría autores, años y DOI."""
+    import re
+
+    assert set(app.REFERENCIAS) == set(app.TEMPLATES)
+    for name, obras in app.REFERENCIAS.items():
+        assert len(obras) >= 3, name
+        for obra in obras:
+            # APA mínima: autor, año entre paréntesis y título.
+            assert re.search(r"\(\d{4}\)\.", obra), (name, obra)
+            assert '"' not in obra and "[" not in obra and "]" not in obra, (name, obra)
+            assert obra in app.TEMPLATES[name], (name, obra)
+
+
+def test_el_prompt_prohibe_citar_fuera_de_la_lista():
+    for name, prompt in app.TEMPLATES.items():
+        assert "sección final titulada Referencias" in prompt, name
+        assert "No añadas ninguna obra que no esté en la lista" in prompt, name
+        assert "no inventes autores, años, páginas ni DOI" in prompt, name
+        assert "R.version.string" in prompt, name
