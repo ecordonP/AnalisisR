@@ -325,3 +325,20 @@ la aplicación antes de actualizar. El destino predeterminado es `C:\AnalizaR`.
 
 Las sesiones guardadas en otra unidad usan un nombre nuevo para conservar
 cualquier archivo anterior sin crear temporales fuera de la instalación.
+
+## Cómo citar AnalizaR Desktop
+
+Si utilizas AnalizaR Desktop en tus investigaciones, artículos académicos o cursos docentes, por favor cita la aplicación de la siguiente forma:
+
+> Cordón-Pozo, E. (2026). *AnalizaR Desktop* (Versión 1.0) [Software de computación]. GitHub. https://github.com/ecordonP/AnalisisR
+
+Formato BibTeX:
+
+```bibtex
+@software{cordon2026analizar,
+  author = {Cordón-Pozo, Eulogio},
+  title = {AnalizaR Desktop: Aplicación autónoma para el análisis estadístico en R con asistencia de IA},
+  url = {[https://github.com/ecordonP/AnalisisR](https://github.com/ecordonP/AnalisisR)},
+  version = {1.0.0},
+  year = {2026}
+}
