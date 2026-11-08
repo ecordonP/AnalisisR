@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Si utilizas esta aplicación en tus investigaciones o docencia, por favor cítala como se indica a continuación."
+authors:
+  - family-names: "Cordón-Pozo"
+    given-names: "Eulogio"
+    orcid: "https://orcid.org/0000-0002-6346-4078" # Opcional: tu ID ORCID si lo tienes
+title: "AnalizaR Desktop: Aplicación autónoma para el análisis estadístico en R con asistencia de IA"
+version: 1.0.0
+date-released: 2026-01-01
+url: "https://github.com/ecordonP/AnalisisR"
